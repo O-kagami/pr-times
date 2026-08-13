@@ -5,6 +5,7 @@ import {
   ArrowUpRight,
   CalendarDays,
   ChevronRight,
+  ChevronLeft,
   HeartPulse,
   RotateCcw,
   Undo2,
@@ -252,95 +253,79 @@ export default function SeseragiHistoryPage() {
 
               {/* Tinder Card Stack Container */}
               <div className={styles.deckContainer}>
-                {currentIndex === SESERAGI_HISTORY.length ? (
-                  <div className={styles.journeyEnd}>
-                    <div className={styles.journeyEndIcon}>
-                      <Sparkles size={36} />
-                    </div>
-                    <h3>せせらぎの歴史をすべて振り返りました！</h3>
-                    <p>
-                      2014年の設立から、最新の365日小児クリニック開院まで、小児医療と子育て支援の歩みを辿りました。
-                    </p>
-                    <button onClick={handleReset} className={styles.restartJourneyBtn}>
-                      <RotateCcw size={16} />
-                      最初からもう一度見る
-                    </button>
-                  </div>
-                ) : (
-                  reversedHistory.map((item, index) => {
-                    const originalIndex = SESERAGI_HISTORY.length - 1 - index;
-                    return (
-                      <TinderCard
-                        ref={childRefs.current[originalIndex]}
-                        key={item.id}
-                        className={styles.cardWrapper}
-                        onSwipe={(dir) => handleSwiped(dir, originalIndex)}
-                        preventSwipe={["up", "down"]}
+                {reversedHistory.map((item, index) => {
+                  const originalIndex = SESERAGI_HISTORY.length - 1 - index;
+                  return (
+                    <TinderCard
+                      ref={childRefs.current[originalIndex]}
+                      key={item.id}
+                      className={styles.cardWrapper}
+                      onSwipe={(dir) => handleSwiped(dir, originalIndex)}
+                      preventSwipe={["up", "down"]}
+                    >
+                      <div
+                        className={`${styles.tinderCard} ${getCardClass(originalIndex)}`}
+                        style={{ "--card-index": originalIndex } as React.CSSProperties}
                       >
                         <div
-                          className={`${styles.tinderCard} ${getCardClass(originalIndex)}`}
-                          style={{ "--card-index": originalIndex } as React.CSSProperties}
+                          className={styles.cardImage}
+                          style={{
+                            backgroundImage: `url("${item.imageUrl}")`,
+                            height: "260px",
+                          }}
                         >
-                          <div
-                            className={styles.cardImage}
+                          <span className={styles.category}>{item.category}</span>
+                          <span className={styles.elapsed}>{item.elapsed}</span>
+                        </div>
+                        <div className={styles.cardBody} style={{ padding: "20px" }}>
+                          <time className={styles.date}>
+                            <CalendarDays aria-hidden="true" size={14} />
+                            {item.publishedAt}
+                          </time>
+                          <h3
                             style={{
-                              backgroundImage: `url("${item.imageUrl}")`,
-                              height: "260px",
+                              fontSize: "16px",
+                              marginTop: "10px",
+                              lineHeight: "1.5",
+                              fontWeight: 800,
                             }}
                           >
-                            <span className={styles.category}>{item.category}</span>
-                            <span className={styles.elapsed}>{item.elapsed}</span>
+                            {item.title}
+                          </h3>
+                          <p
+                            className={styles.summary}
+                            style={{
+                              fontSize: "12px",
+                              marginTop: "8px",
+                              display: "-webkit-box",
+                              WebkitLineClamp: 3,
+                              WebkitBoxOrient: "vertical",
+                              overflow: "hidden",
+                              lineHeight: "1.8",
+                            }}
+                          >
+                            {item.summary}
+                          </p>
+                          <div className={styles.keywords} style={{ paddingTop: "12px" }}>
+                            {item.keywords.map((keyword) => (
+                              <span key={keyword}>#{keyword}</span>
+                            ))}
                           </div>
-                          <div className={styles.cardBody} style={{ padding: "20px" }}>
-                            <time className={styles.date}>
-                              <CalendarDays aria-hidden="true" size={14} />
-                              {item.publishedAt}
-                            </time>
-                            <h3
-                              style={{
-                                fontSize: "16px",
-                                marginTop: "10px",
-                                lineHeight: "1.5",
-                                fontWeight: 800,
-                              }}
+                          {item.href && (
+                            <Link
+                              className={`${styles.detailLink} pressable`}
+                              href={item.href}
+                              style={{ marginTop: "12px", paddingTop: "10px" }}
                             >
-                              {item.title}
-                            </h3>
-                            <p
-                              className={styles.summary}
-                              style={{
-                                fontSize: "12px",
-                                marginTop: "8px",
-                                display: "-webkit-box",
-                                WebkitLineClamp: 3,
-                                WebkitBoxOrient: "vertical",
-                                overflow: "hidden",
-                                lineHeight: "1.8",
-                              }}
-                            >
-                              {item.summary}
-                            </p>
-                            <div className={styles.keywords} style={{ paddingTop: "12px" }}>
-                              {item.keywords.map((keyword) => (
-                                <span key={keyword}>#{keyword}</span>
-                              ))}
-                            </div>
-                            {item.href && (
-                              <Link
-                                className={`${styles.detailLink} pressable`}
-                                href={item.href}
-                                style={{ marginTop: "12px", paddingTop: "10px" }}
-                              >
-                                この発信を詳しく見る
-                                <ArrowUpRight aria-hidden="true" size={15} />
-                              </Link>
-                            )}
-                          </div>
+                              この発信を詳しく見る
+                              <ArrowUpRight aria-hidden="true" size={15} />
+                            </Link>
+                          )}
                         </div>
-                      </TinderCard>
-                    );
-                  })
-                )}
+                      </div>
+                    </TinderCard>
+                  );
+                })}
               </div>
 
               {/* Tinder Swiper Control Panel */}
@@ -349,39 +334,31 @@ export default function SeseragiHistoryPage() {
                   onClick={handleReset}
                   disabled={currentIndex === 0}
                   className={`${styles.controlButton} ${styles.resetButton}`}
-                  title="最初から"
+                  title="最初に戻る"
                 >
                   <RotateCcw size={20} />
                 </button>
                 <button
-                  onClick={() => handleSwipeButtonClick("left")}
-                  disabled={currentIndex === SESERAGI_HISTORY.length}
+                  onClick={() => handleSliderChange(activeTimelineIndex - 1)}
+                  disabled={activeTimelineIndex === 0}
                   className={`${styles.controlButton} ${styles.swipeLeftButton}`}
-                  title="過去へ遡る"
+                  title="過去（古い年代）へ"
                 >
-                  <ChevronRight className="rotate-180" size={24} />
+                  <ChevronLeft size={24} />
                 </button>
                 <button
-                  onClick={() => handleSwipeButtonClick("right")}
-                  disabled={currentIndex === SESERAGI_HISTORY.length}
+                  onClick={() => handleSliderChange(activeTimelineIndex + 1)}
+                  disabled={activeTimelineIndex === SESERAGI_HISTORY.length - 1}
                   className={`${styles.controlButton} ${styles.swipeRightButton}`}
-                  title="過去へ遡る"
+                  title="未来（新しい年代）へ"
                 >
                   <ChevronRight size={24} />
-                </button>
-                <button
-                  onClick={handleUndo}
-                  disabled={currentIndex === 0}
-                  className={`${styles.controlButton} ${styles.undoButton}`}
-                  title="1つ戻す"
-                >
-                  <Undo2 size={20} />
                 </button>
               </div>
 
               <div className={styles.swipeInstructions}>
                 <span>
-                  <ArrowRightLeft size={14} /> 左右スワイプで歴史を遡れます
+                  <ArrowRightLeft size={14} /> スライダー操作または左右スワイプで歴史を遡れます
                 </span>
               </div>
             </div>
