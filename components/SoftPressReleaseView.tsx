@@ -3,6 +3,7 @@
 
 import { PressRelease } from "@/data/pressReleases";
 import { SoftPrNoteContent } from "@/components/SoftPrNoteContent";
+import Link from "next/link";
 
 interface SoftPressReleaseViewProps {
   release: PressRelease;
@@ -15,7 +16,7 @@ export function SoftPressReleaseView({ release }: SoftPressReleaseViewProps) {
   return (
     <div className="font-sans text-[#1a1a1a]">
       <div className="flex items-center justify-between gap-4 border-b border-[#e5e5e5] pb-4 mb-8">
-        <span className="text-sm font-bold">{release.company}</span>
+        <Link className="text-sm font-bold hover:text-[#0066cc]" href={`/companies/${release.companyId}`}>{release.company}</Link>
         <span className="whitespace-nowrap text-xs text-[#666]">広報担当コメント付き版</span>
       </div>
 
@@ -28,7 +29,7 @@ export function SoftPressReleaseView({ release }: SoftPressReleaseViewProps) {
         </p>
       )}
       <div className="mb-8 flex items-center gap-4">
-        <span className="text-sm font-bold">{release.company}</span>
+        <Link className="text-sm font-bold hover:text-[#0066cc]" href={`/companies/${release.companyId}`}>{release.company}</Link>
         <span className="text-sm text-[#767676]">{release.publishedAt}</span>
       </div>
 

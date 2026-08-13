@@ -58,7 +58,7 @@ export const ArticlePage: React.FC<ArticlePageProps> = ({ release }) => {
 
   // Filter related releases
   const companyReleases = PRESS_RELEASES.filter(
-    (r) => r.company === release.company && r.id !== release.id
+    (r) => r.companyId === release.companyId && r.id !== release.id
   );
   const relatedReleases = PRESS_RELEASES.filter(
     (r) => r.category === release.category && r.id !== release.id
@@ -81,9 +81,12 @@ export const ArticlePage: React.FC<ArticlePageProps> = ({ release }) => {
             <ChevronRight className="w-3 h-3 text-gray-400" />
             <span className="hover:text-[#0066cc] cursor-pointer">{release.category}</span>
             <ChevronRight className="w-3 h-3 text-gray-400" />
-            <span className="hover:text-[#0066cc] cursor-pointer truncate max-w-[150px]">
+            <Link
+              className="hover:text-[#0066cc] truncate max-w-[150px]"
+              href={`/companies/${release.companyId}`}
+            >
               {release.company}
-            </span>
+            </Link>
             <ChevronRight className="w-3 h-3 text-gray-400" />
             <span className="text-gray-800 font-medium">プレスリリース</span>
           </nav>
@@ -208,7 +211,11 @@ export const ArticlePage: React.FC<ArticlePageProps> = ({ release }) => {
                   <Building2 className="w-6 h-6 text-sky-300" />
                 </div>
                 <div>
-                  <h4 className="text-sm font-extrabold text-gray-900">{release.company}</h4>
+                  <h4 className="text-sm font-extrabold text-gray-900">
+                    <Link className="hover:text-[#0066cc]" href={`/companies/${release.companyId}`}>
+                      {release.company}
+                    </Link>
+                  </h4>
                   <span className="text-[11px] text-gray-500">PR TIMES 認証企業</span>
                 </div>
               </div>
@@ -224,7 +231,10 @@ export const ArticlePage: React.FC<ArticlePageProps> = ({ release }) => {
             {companyReleases.length > 0 && (
               <div className="bg-white rounded border border-gray-200 p-4">
                 <h3 className="text-sm font-bold text-gray-900 mb-3 pb-2 border-b border-gray-100">
-                  {release.company} の最新プレスリリース
+                  <Link className="hover:text-[#0066cc]" href={`/companies/${release.companyId}`}>
+                    {release.company}
+                  </Link>{" "}
+                  の最新プレスリリース
                 </h3>
                 <div className="space-y-3">
                   {companyReleases.map((rel) => (
@@ -251,23 +261,31 @@ export const ArticlePage: React.FC<ArticlePageProps> = ({ release }) => {
                 </h3>
                 <div className="space-y-3">
                   {relatedReleases.slice(0, 3).map((rel) => (
-                    <Link
+                    <div
                       key={rel.id}
-                      href={`/companies/${rel.companyId}/releases/${rel.id}`}
                       className="flex items-start gap-2 group pb-2 border-b border-gray-100 last:border-b-0"
                     >
-                      <img
-                        src={rel.imageUrl}
-                        alt={rel.title}
-                        className="w-16 h-12 object-cover rounded shrink-0 bg-gray-100"
-                      />
+                      <Link href={`/companies/${rel.companyId}/releases/${rel.id}`}>
+                        <img
+                          src={rel.imageUrl}
+                          alt={rel.title}
+                          className="w-16 h-12 object-cover rounded shrink-0 bg-gray-100"
+                        />
+                      </Link>
                       <div className="flex-1 min-w-0">
-                        <h4 className="text-xs font-bold text-gray-800 group-hover:text-[#0066cc] line-clamp-2 leading-snug">
-                          {rel.title}
-                        </h4>
-                        <span className="text-[10px] text-gray-400 block mt-0.5">{rel.company}</span>
+                        <Link href={`/companies/${rel.companyId}/releases/${rel.id}`}>
+                          <h4 className="text-xs font-bold text-gray-800 group-hover:text-[#0066cc] line-clamp-2 leading-snug">
+                            {rel.title}
+                          </h4>
+                        </Link>
+                        <Link
+                          className="text-[10px] text-gray-400 hover:text-[#0066cc] block mt-0.5"
+                          href={`/companies/${rel.companyId}`}
+                        >
+                          {rel.company}
+                        </Link>
                       </div>
-                    </Link>
+                    </div>
                   ))}
                 </div>
               </div>

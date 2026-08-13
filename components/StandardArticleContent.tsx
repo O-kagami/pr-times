@@ -3,6 +3,7 @@
 
 import { AnnotatedContent } from "@/components/AnnotatedContent";
 import { PressRelease } from "@/data/pressReleases";
+import Link from "next/link";
 import {
   Building2,
   Calendar,
@@ -32,7 +33,11 @@ export function StandardArticleContent({ release }: StandardArticleContentProps)
           <span className="text-[10px] text-gray-500 block uppercase font-bold tracking-wider">
             プレスリリース配信企業
           </span>
-          <h3 className="text-sm font-bold text-gray-900">{release.company}</h3>
+          <h3 className="text-sm font-bold text-gray-900">
+            <Link className="hover:text-[#0066cc]" href={`/companies/${release.companyId}`}>
+              {release.company}
+            </Link>
+          </h3>
         </div>
       </div>
 
@@ -244,7 +249,9 @@ export function StandardArticleContent({ release }: StandardArticleContentProps)
       {release.companyProfile && (
         <div className="mb-8 border border-gray-300 rounded-lg overflow-hidden">
           <div className="bg-[#182b45] text-white px-4 py-2.5 text-xs font-bold flex items-center justify-between">
-            <span>{release.companyProfile.name} 会社概要</span>
+            <Link className="hover:text-sky-200" href={`/companies/${release.companyId}`}>
+              {release.companyProfile.name} 会社概要
+            </Link>
             <span className="text-[10px] text-sky-300">企業情報</span>
           </div>
           <div className="p-4 bg-white text-xs">
@@ -252,7 +259,11 @@ export function StandardArticleContent({ release }: StandardArticleContentProps)
               <tbody className="divide-y divide-gray-200">
                 <tr>
                   <th className="py-2 px-3 text-left bg-gray-50 text-gray-600 w-28 font-semibold">社名</th>
-                  <td className="py-2 px-3 text-gray-900 font-bold">{release.companyProfile.name}</td>
+                  <td className="py-2 px-3 text-gray-900 font-bold">
+                    <Link className="hover:text-[#0066cc]" href={`/companies/${release.companyId}`}>
+                      {release.companyProfile.name}
+                    </Link>
+                  </td>
                 </tr>
                 <tr>
                   <th className="py-2 px-3 text-left bg-gray-50 text-gray-600 font-semibold">代表者</th>
@@ -297,7 +308,11 @@ export function StandardArticleContent({ release }: StandardArticleContentProps)
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs text-gray-800">
             <div className="space-y-1">
               <span className="text-gray-500 block text-[10px]">担当部署・担当者</span>
-              <p className="font-bold">{release.company}</p>
+              <p className="font-bold">
+                <Link className="hover:text-[#0066cc]" href={`/companies/${release.companyId}`}>
+                  {release.company}
+                </Link>
+              </p>
               <p className="text-gray-700">{release.contactInfo.department}</p>
               {release.contactInfo.person && <p className="text-gray-700">{release.contactInfo.person}</p>}
             </div>
