@@ -20,7 +20,6 @@ import {
   useMemo,
   useState,
 } from "react";
-import TinderCard from "react-tinder-card";
 import type {
   CompanyDirectoryEntry,
   CompanyHistoryItem,
@@ -29,12 +28,10 @@ import { CategoryNav } from "./CategoryNav";
 import styles from "./CompanyHistoryPage.module.css";
 import { Footer } from "./Footer";
 import { Header } from "./Header";
+import SwipeCard from "./SwipeCard";
+import type { SwipeCardApi } from "./SwipeCard";
 
 type SwipeDirection = "left" | "right";
-type TinderCardApi = {
-  swipe: (direction?: "left" | "right" | "up" | "down") => Promise<void>;
-  restoreCard: () => Promise<void>;
-};
 
 type DeckCardStyle = CSSProperties & {
   "--card-depth": string;
@@ -208,14 +205,14 @@ export default function CompanyHistoryPage({
     [rotation, visibleHistory],
   );
 
-  // react-tinder-cardでは配列の末尾が最前面になるため、表示順を反転します。
+  // 配列の末尾を最前面のカードとして扱うため、表示順を反転します。
   const deckItems = useMemo(
     () => [...orderedHistory].reverse(),
     [orderedHistory],
   );
   const deckRenderKey = `${deckBaseKey}:${activeStep}`;
   const childRefs = useMemo(
-    () => deckItems.map(() => createRef<TinderCardApi>()),
+    () => deckItems.map(() => createRef<SwipeCardApi>()),
     [deckItems],
   );
   const [animationState, setAnimationState] = useState(() => ({
@@ -395,14 +392,13 @@ export default function CompanyHistoryPage({
                   zIndex: index + 1,
                 };
                 return (
-                  <TinderCard
+                  <SwipeCard
                     className={styles.swipeCard}
                     key={item.id}
                     onCardLeftScreen={handleCardLeftScreen}
                     onSwipe={handleSwipe}
                     preventSwipe={["up", "down"]}
                     ref={childRefs[index]}
-                    swipeRequirementType="position"
                     swipeThreshold={110}
                   >
                     <button
@@ -434,7 +430,7 @@ export default function CompanyHistoryPage({
                         </div>
                       </div>
                     </button>
-                  </TinderCard>
+                  </SwipeCard>
                 );
               })}
             </div>
