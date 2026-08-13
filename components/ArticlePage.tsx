@@ -6,15 +6,14 @@ import { Header } from "@/components/Header";
 import { CategoryNav } from "@/components/CategoryNav";
 import { Footer } from "@/components/Footer";
 import { StandardArticleContent } from "@/components/StandardArticleContent";
-import { SoftPressReleaseView } from "@/components/SoftPressReleaseView";
 import { PressRelease, PRESS_RELEASES } from "@/data/pressReleases";
 import {
-  Building2,
   Heart,
   Share2,
+  MessageCircle,
+  Link2,
   Download,
   ChevronRight,
-  ArrowLeft,
   Sparkles,
 } from "lucide-react";
 import Link from "next/link";
@@ -23,24 +22,21 @@ interface ArticlePageProps {
   release: PressRelease;
 }
 
-type ViewTab = "content" | "soft";
-
 export const ArticlePage: React.FC<ArticlePageProps> = ({ release }) => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [likes, setLikes] = useState(release.likesCount || 0);
   const [hasLiked, setHasLiked] = useState(false);
-  const [activeTab, setActiveTab] = useState<ViewTab>(
-    searchParams.get("mode") === "soft" ? "soft" : "content"
-  );
+  const [showSoftPr, setShowSoftPr] = useState(searchParams.get("soft") === "1");
 
-  const handleTabChange = (tab: ViewTab) => {
-    setActiveTab(tab);
+  const handleToggleSoftPr = () => {
+    const next = !showSoftPr;
+    setShowSoftPr(next);
     const params = new URLSearchParams(searchParams.toString());
-    if (tab === "soft") {
-      params.set("mode", "soft");
+    if (next) {
+      params.set("soft", "1");
     } else {
-      params.delete("mode");
+      params.delete("soft");
     }
     const query = params.toString();
     router.replace(query ? `?${query}` : "?", { scroll: false });
@@ -65,236 +61,172 @@ export const ArticlePage: React.FC<ArticlePageProps> = ({ release }) => {
   );
 
   return (
-    <div className="min-h-screen bg-[#f5f6f8] text-gray-900 flex flex-col font-sans">
-      {/* 1. Header & Navigation */}
+    <div className="min-h-screen bg-white text-[#1a1a1a] flex flex-col font-sans">
       <Header searchQuery="" onSearchChange={() => {}} />
       <CategoryNav selectedCategory="all" onSelectCategory={() => {}} />
 
-      {/* 2. Breadcrumbs & Top Bar */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-[1200px] mx-auto px-4 py-2 flex items-center justify-between text-xs text-gray-500 overflow-x-auto">
-          <nav className="flex items-center gap-1.5 min-w-max">
-            <Link href="/" className="hover:text-[#0066cc] flex items-center gap-1">
-              <ArrowLeft className="w-3 h-3" />
-              <span>PR TIMES トップ</span>
-            </Link>
-            <ChevronRight className="w-3 h-3 text-gray-400" />
-            <span className="hover:text-[#0066cc] cursor-pointer">{release.category}</span>
-            <ChevronRight className="w-3 h-3 text-gray-400" />
-            <Link
-              className="hover:text-[#0066cc] truncate max-w-[150px]"
-              href={`/companies/${release.companyId}`}
-            >
-              {release.company}
-            </Link>
-            <ChevronRight className="w-3 h-3 text-gray-400" />
-            <span className="text-gray-800 font-medium">プレスリリース</span>
-          </nav>
-
-          <div className="hidden md:flex items-center gap-3 shrink-0">
-            <span className="text-[11px] text-gray-400">配信日時：{release.publishedAt}</span>
-          </div>
+      {/* Breadcrumb */}
+      <div className="border-b border-[#e5e5e5]">
+        <div className="max-w-[900px] mx-auto px-4 py-2.5 flex items-center gap-1 text-xs text-[#767676] overflow-x-auto">
+          <Link href="/" className="hover:text-[#0066cc] whitespace-nowrap">
+            PR TIMES
+          </Link>
+          <ChevronRight className="w-3 h-3 text-[#ccc] shrink-0" />
+          <span className="hover:text-[#0066cc] cursor-pointer whitespace-nowrap">
+            {release.category}
+          </span>
+          <ChevronRight className="w-3 h-3 text-[#ccc] shrink-0" />
+          <span className="text-[#767676] truncate">{release.company}</span>
         </div>
       </div>
 
-      {/* 3. Main Article Body Container */}
-      <main className="max-w-[1200px] mx-auto w-full px-4 py-6 flex-1">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* Left / Center Article Main Column (8 cols) */}
-          <article className="lg:col-span-8 bg-white border border-gray-200 rounded-lg p-4 md:p-8 shadow-xs">
-            {/* Action Bar (Top of Article) */}
-            <div className="flex flex-wrap items-center justify-between gap-3 pb-4 mb-6 border-b border-gray-200 text-xs">
-              <div className="flex items-center gap-2">
-                <span className="bg-[#0066cc] text-white font-bold px-2.5 py-1 rounded text-xs">
-                  {release.category}
-                </span>
-                <span className="text-gray-500">{release.timestamp}</span>
-              </div>
-
-              {/* Social Share & Download Buttons */}
-              <div className="flex items-center gap-2 flex-wrap">
-                <button
-                  onClick={handleLike}
-                  className={`flex items-center gap-1 px-3 py-1 rounded-full border text-xs font-bold transition-all ${
-                    hasLiked
-                      ? "bg-rose-50 border-rose-300 text-rose-600"
-                      : "bg-gray-50 border-gray-300 text-gray-700 hover:bg-gray-100"
-                  }`}
-                >
-                  <Heart className={`w-3.5 h-3.5 ${hasLiked ? "fill-rose-600" : ""}`} />
-                  <span>いいね！ {likes}</span>
-                </button>
-
-                <button
-                  onClick={() => alert("ツイート用リンクをコピーしました")}
-                  className="flex items-center gap-1 px-3 py-1 bg-sky-500 hover:bg-sky-600 text-white rounded text-xs font-bold transition-colors"
-                >
-                  <Share2 className="w-3.5 h-3.5" />
-                  <span>ツイート</span>
-                </button>
-
-                <button
-                  onClick={() => alert("プレスリリース素材のダウンロードを開始します")}
-                  className="flex items-center gap-1 px-3 py-1 bg-[#182b45] hover:bg-[#243d61] text-white rounded text-xs font-bold transition-colors"
-                >
-                  <Download className="w-3.5 h-3.5" />
-                  <span>素材DL</span>
-                </button>
-              </div>
+      <main className="max-w-[900px] mx-auto w-full px-4 py-8 flex-1">
+        <article>
+          {/* Byline */}
+          <div className="flex flex-wrap items-center justify-between gap-3 pb-4 mb-2 border-b border-[#e5e5e5] text-sm">
+            <div className="flex items-center gap-3">
+              <span className="font-bold text-[#1a1a1a]">{release.company}</span>
+              <time className="text-[#767676]">{release.publishedAt}</time>
             </div>
 
-            {/* View Mode Tabs */}
-            <div className="flex items-center gap-1 mb-6 border-b border-gray-200">
+            <div className="flex items-center gap-1 text-[#1a1a1a]">
+              {release.softPr && (
+                <>
+                  <button
+                    onClick={handleToggleSoftPr}
+                    role="switch"
+                    aria-checked={showSoftPr}
+                    className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-bold transition-colors ${
+                      showSoftPr ? "text-[#a8703a]" : "text-[#999] hover:text-[#1a1a1a]"
+                    }`}
+                  >
+                    <Sparkles className="w-3.5 h-3.5" />
+                    やわらかいPR
+                    <span
+                      className={`relative inline-flex h-4 w-7 shrink-0 rounded-full transition-colors ${
+                        showSoftPr ? "bg-[#a8703a]" : "bg-[#d9d9d9]"
+                      }`}
+                    >
+                      <span
+                        className={`absolute top-0.5 h-3 w-3 rounded-full bg-white transition-transform ${
+                          showSoftPr ? "translate-x-3.5" : "translate-x-0.5"
+                        }`}
+                      />
+                    </span>
+                  </button>
+                  <span className="w-px h-4 bg-[#e5e5e5] mx-1" aria-hidden="true" />
+                </>
+              )}
               <button
-                onClick={() => handleTabChange("content")}
-                className={`px-4 py-2.5 text-sm font-bold border-b-2 -mb-px transition-colors ${
-                  activeTab === "content"
-                    ? "border-[#0066cc] text-[#0066cc]"
-                    : "border-transparent text-gray-500 hover:text-gray-700"
-                }`}
+                onClick={handleLike}
+                aria-label="いいね"
+                className="flex items-center gap-1 px-2 py-1 hover:opacity-60 transition-opacity"
               >
-                公式リリース
+                <Heart className={`w-4 h-4 ${hasLiked ? "fill-[#1a1a1a]" : ""}`} />
+                <span className="text-xs">{likes}</span>
+              </button>
+              <span className="w-px h-4 bg-[#e5e5e5] mx-1" aria-hidden="true" />
+              <button
+                onClick={() => alert("ツイート用リンクをコピーしました")}
+                aria-label="Xでシェア"
+                className="p-1.5 hover:opacity-60 transition-opacity"
+              >
+                <Share2 className="w-4 h-4" />
               </button>
               <button
-                onClick={() => handleTabChange("soft")}
-                className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-bold border-b-2 -mb-px transition-colors ${
-                  activeTab === "soft"
-                    ? "border-[#a8703a] text-[#a8703a]"
-                    : "border-transparent text-gray-500 hover:text-gray-700"
-                }`}
+                onClick={() => alert("LINEでシェアします")}
+                aria-label="LINEでシェア"
+                className="p-1.5 hover:opacity-60 transition-opacity"
               >
-                <Sparkles className="w-3.5 h-3.5" />
-                やわらかいPR
+                <MessageCircle className="w-4 h-4" />
+              </button>
+              <span className="w-px h-4 bg-[#e5e5e5] mx-1" aria-hidden="true" />
+              <button
+                onClick={() => alert("プレスリリース素材のダウンロードを開始します")}
+                aria-label="素材ダウンロード"
+                className="p-1.5 hover:opacity-60 transition-opacity"
+              >
+                <Download className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => alert("リンクをコピーしました")}
+                aria-label="リンクをコピー"
+                className="p-1.5 hover:opacity-60 transition-opacity"
+              >
+                <Link2 className="w-4 h-4" />
               </button>
             </div>
+          </div>
 
-            {activeTab === "soft" && release.softPr ? (
-              <SoftPressReleaseView release={release} />
-            ) : (
-              <StandardArticleContent release={release} />
-            )}
+          <StandardArticleContent release={release} showSoftPr={showSoftPr} />
+        </article>
 
-            {/* Bottom Social Share Bar */}
-            <div className="p-4 bg-[#182b45] text-white rounded-lg flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div className="text-center sm:text-left">
-                <span className="text-xs text-sky-300 block font-bold">このプレスリリースを共有</span>
-                <span className="text-[11px] text-gray-300">SNSやメッセージで最新ニュースをお届け</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={handleLike}
-                  className="flex items-center gap-1.5 px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded text-xs font-bold transition-colors"
-                >
-                  <Heart className="w-4 h-4 fill-white" />
-                  <span>いいね！</span>
-                </button>
-                <button
-                  onClick={() => alert("シェア用リンクをコピーしました")}
-                  className="flex items-center gap-1.5 px-4 py-2 bg-[#0066cc] hover:bg-[#0055b8] text-white rounded text-xs font-bold transition-colors"
-                >
-                  <Share2 className="w-4 h-4" />
-                  <span>シェア</span>
-                </button>
-              </div>
-            </div>
-          </article>
-
-          {/* Right Sidebar Column (4 cols) */}
-          <aside className="lg:col-span-4 space-y-6">
-            {/* Company Info Box */}
-            <div className="bg-white rounded border border-gray-200 p-4 shadow-xs">
-              <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
-                配信元企業
-              </h3>
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-12 h-12 rounded bg-[#182b45] text-white font-bold flex items-center justify-center text-base shrink-0">
-                  <Building2 className="w-6 h-6 text-sky-300" />
-                </div>
-                <div>
-                  <h4 className="text-sm font-extrabold text-gray-900">
-                    <Link className="hover:text-[#0066cc]" href={`/companies/${release.companyId}`}>
-                      {release.company}
-                    </Link>
-                  </h4>
-                  <span className="text-[11px] text-gray-500">PR TIMES 認証企業</span>
-                </div>
-              </div>
+        {/* Company Info & Related Releases */}
+        <div className="mt-14 pt-8 border-t border-[#e5e5e5] grid grid-cols-1 md:grid-cols-2 gap-10">
+          <div>
+            <h3 className="text-sm font-bold text-[#1a1a1a] mb-3">配信元企業</h3>
+            <div className="flex items-center justify-between gap-3 pb-3 mb-3 border-b border-[#e5e5e5]">
+              <span className="text-sm font-bold text-[#1a1a1a]">{release.company}</span>
               <button
                 onClick={() => alert("企業フォロー登録を完了しました")}
-                className="w-full py-2 bg-[#0066cc] hover:bg-[#0055b8] text-white text-xs font-bold rounded shadow transition-colors"
+                className="px-4 py-1.5 border border-[#1a1a1a] text-[#1a1a1a] text-xs font-bold hover:bg-[#1a1a1a] hover:text-white transition-colors"
               >
-                この企業をフォロー
+                フォロー
               </button>
             </div>
 
-            {/* Company's Other Releases */}
             {companyReleases.length > 0 && (
-              <div className="bg-white rounded border border-gray-200 p-4">
-                <h3 className="text-sm font-bold text-gray-900 mb-3 pb-2 border-b border-gray-100">
-                  <Link className="hover:text-[#0066cc]" href={`/companies/${release.companyId}`}>
-                    {release.company}
-                  </Link>{" "}
-                  の最新プレスリリース
-                </h3>
-                <div className="space-y-3">
-                  {companyReleases.map((rel) => (
+              <ul className="space-y-2.5">
+                {companyReleases.map((rel) => (
+                  <li key={rel.id}>
                     <Link
-                      key={rel.id}
                       href={`/companies/${rel.companyId}/releases/${rel.id}`}
-                      className="block group space-y-1 pb-2 border-b border-gray-100 last:border-b-0"
+                      className="group block"
                     >
-                      <h4 className="text-xs font-bold text-gray-800 group-hover:text-[#0066cc] line-clamp-2 leading-snug">
+                      <span className="text-xs text-[#1a1a1a] group-hover:text-[#0066cc] line-clamp-2 leading-snug">
                         {rel.title}
-                      </h4>
-                      <span className="text-[10px] text-gray-400">{rel.timestamp}</span>
+                      </span>
+                      <span className="block text-[11px] text-[#999] mt-0.5">{rel.timestamp}</span>
                     </Link>
-                  ))}
-                </div>
-              </div>
+                  </li>
+                ))}
+              </ul>
             )}
+          </div>
 
-            {/* Related Releases in Same Category */}
-            {relatedReleases.length > 0 && (
-              <div className="bg-white rounded border border-gray-200 p-4">
-                <h3 className="text-sm font-bold text-gray-900 mb-3 pb-2 border-b border-gray-100">
-                  関連するプレスリリース（{release.category}）
-                </h3>
-                <div className="space-y-3">
-                  {relatedReleases.slice(0, 3).map((rel) => (
-                    <div
-                      key={rel.id}
-                      className="flex items-start gap-2 group pb-2 border-b border-gray-100 last:border-b-0"
+          {relatedReleases.length > 0 && (
+            <div>
+              <h3 className="text-sm font-bold text-[#1a1a1a] mb-3 pb-3 border-b border-[#e5e5e5]">
+                関連するプレスリリース（{release.category}）
+              </h3>
+              <ul className="space-y-3">
+                {relatedReleases.slice(0, 3).map((rel) => (
+                  <li key={rel.id}>
+                    <Link
+                      href={`/companies/${rel.companyId}/releases/${rel.id}`}
+                      className="flex items-start gap-3 group"
                     >
-                      <Link href={`/companies/${rel.companyId}/releases/${rel.id}`}>
-                        <img
-                          src={rel.imageUrl}
-                          alt={rel.title}
-                          className="w-16 h-12 object-cover rounded shrink-0 bg-gray-100"
-                        />
-                      </Link>
-                      <div className="flex-1 min-w-0">
-                        <Link href={`/companies/${rel.companyId}/releases/${rel.id}`}>
-                          <h4 className="text-xs font-bold text-gray-800 group-hover:text-[#0066cc] line-clamp-2 leading-snug">
-                            {rel.title}
-                          </h4>
-                        </Link>
-                        <Link
-                          className="text-[10px] text-gray-400 hover:text-[#0066cc] block mt-0.5"
-                          href={`/companies/${rel.companyId}`}
-                        >
-                          {rel.company}
-                        </Link>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={rel.imageUrl}
+                        alt=""
+                        className="w-16 h-11 object-cover shrink-0 bg-[#f5f5f5]"
+                      />
+                      <div className="min-w-0">
+                        <span className="block text-xs text-[#1a1a1a] group-hover:text-[#0066cc] line-clamp-2 leading-snug">
+                          {rel.title}
+                        </span>
+                        <span className="block text-[11px] text-[#999] mt-0.5">{rel.company}</span>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </aside>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       </main>
 
-      {/* 4. Footer */}
       <Footer />
     </div>
   );

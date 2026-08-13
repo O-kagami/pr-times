@@ -3,6 +3,16 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import styles from "./admin.module.css";
+import SidebarNav from "./ui/SidebarNav";
+
+const items = [
+  { title: "ダッシュボード", href: "/admin" },
+  { title: "プレスリリース", href: "/admin/press-releases" },
+  { title: "メディアリスト", href: "/admin/media-list" },
+  { title: "分析データ", href: "/admin/analytics" },
+  { title: "企業ページ", href: "/admin/company" },
+  { title: "設定", href: "/admin/settings" },
+];
 
 const navigation = [
   { label: "ダッシュボード", href: "/admin" },
