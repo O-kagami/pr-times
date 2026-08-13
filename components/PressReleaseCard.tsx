@@ -2,8 +2,10 @@
 
 import React from "react";
 import { PressRelease } from "@/data/pressReleases";
+import { getCompanyHref } from "@/lib/companyLinks";
 import { Clock, Building2 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 interface PressReleaseCardProps {
   release: PressRelease;
@@ -14,6 +16,9 @@ export const PressReleaseCard: React.FC<PressReleaseCardProps> = ({
   release,
   onClick,
 }) => {
+  const router = useRouter();
+  const companyHref = getCompanyHref(release.companyId);
+
   return (
     <Link
       href={`/companies/${release.companyId}/releases/${release.id}`}
@@ -51,7 +56,30 @@ export const PressReleaseCard: React.FC<PressReleaseCardProps> = ({
         <div className="mt-3 flex items-center justify-between text-xs text-gray-500 pt-2 border-t border-gray-100">
           <span className="flex items-center gap-1 font-medium text-gray-700 truncate max-w-[240px]">
             <Building2 className="w-3.5 h-3.5 text-gray-400 shrink-0" />
-            <span className="truncate">{release.company}</span>
+            {companyHref ? (
+              // カード全体が Link のため、入れ子の <a> を避けて手動で遷移する
+              <span
+                role="link"
+                tabIndex={0}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  router.push(companyHref);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    router.push(companyHref);
+                  }
+                }}
+                className="truncate hover:text-[#0066cc] hover:underline cursor-pointer"
+              >
+                {release.company}
+              </span>
+            ) : (
+              <span className="truncate">{release.company}</span>
+            )}
           </span>
 
           <div className="flex items-center gap-1 text-[10px] text-gray-400 shrink-0">

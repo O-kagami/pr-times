@@ -7,6 +7,7 @@ import { CategoryNav } from "@/components/CategoryNav";
 import { Footer } from "@/components/Footer";
 import { StandardArticleContent } from "@/components/StandardArticleContent";
 import { PressRelease, PRESS_RELEASES } from "@/data/pressReleases";
+import { getCompanyHref } from "@/lib/companyLinks";
 import {
   Heart,
   Share2,
@@ -60,6 +61,8 @@ export const ArticlePage: React.FC<ArticlePageProps> = ({ release }) => {
     (r) => r.category === release.category && r.id !== release.id
   );
 
+  const companyHref = getCompanyHref(release.companyId);
+
   return (
     <div className="min-h-screen bg-white text-[#1a1a1a] flex flex-col font-sans">
       <Header searchQuery="" onSearchChange={() => {}} />
@@ -76,7 +79,13 @@ export const ArticlePage: React.FC<ArticlePageProps> = ({ release }) => {
             {release.category}
           </span>
           <ChevronRight className="w-3 h-3 text-[#ccc] shrink-0" />
-          <span className="text-[#767676] truncate">{release.company}</span>
+          {companyHref ? (
+            <Link href={companyHref} className="hover:text-[#0066cc] hover:underline truncate">
+              {release.company}
+            </Link>
+          ) : (
+            <span className="text-[#767676] truncate">{release.company}</span>
+          )}
         </div>
       </div>
 
