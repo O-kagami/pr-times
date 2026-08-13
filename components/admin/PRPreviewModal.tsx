@@ -5,6 +5,8 @@ import { Dialog, DialogHeader, DialogTitle, DialogDescription } from "@/componen
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/badge";
 import { PressRelease } from "@/data/pressReleases";
+import { AnnotatedContent } from "@/components/AnnotatedContent";
+
 
 interface PRPreviewModalProps {
   open: boolean;
@@ -108,8 +110,34 @@ export default function PRPreviewModal({ open, onOpenChange, prData }: PRPreview
 
         {/* Content Body */}
         <div className="prose max-w-none text-gray-800 text-sm leading-relaxed whitespace-pre-wrap">
-          {prData.content || "（本文が未入力です）"}
+          {prData.softPr ? (
+            <AnnotatedContent
+              content={prData.content || "（本文が未入力です）"}
+              softNotes={prData.softPr.notes}
+            />
+          ) : (
+            prData.content || "（本文が未入力です）"
+          )}
         </div>
+
+        {/* Soft PR Reflection Message Block */}
+        {prData.softPr && prData.softPr.reflection && (
+          <div className="border border-[#ebdfcb] bg-[#fbf6ee] p-5 rounded-lg space-y-3">
+            <div className="text-xs font-bold text-[#a8703a] tracking-wide uppercase">
+              広報担当より　このリリースについて
+            </div>
+            <div className="space-y-2 text-xs text-[#362f26] leading-relaxed">
+              {prData.softPr.reflection.map((para, idx) => (
+                <p key={idx}>{para}</p>
+              ))}
+            </div>
+            {prData.softPr.author && (
+              <div className="pt-2 border-t border-[#e8ddc9] text-[11px] text-[#786b59] font-medium">
+                投稿者: 広報担当 {prData.softPr.author.name} （{prData.softPr.author.role}）
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Keywords / Tags */}
         {prData.keywords && prData.keywords.length > 0 && (

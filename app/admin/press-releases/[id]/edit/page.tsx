@@ -4,7 +4,6 @@ import { PRESS_RELEASES } from "@/data/pressReleases";
 import PRForm from "@/components/admin/PRForm";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
-import { ArrowLeft } from "lucide-react";
 
 type Props = { params: Promise<{ id: string }> | { id: string } };
 
@@ -27,22 +26,8 @@ export default async function EditPage({ params }: Props) {
 
   return (
     <AdminLayout>
-      <div className="mb-6 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Link href="/admin/press-releases">
-            <Button variant="outline" size="sm" className="flex items-center gap-1">
-              <ArrowLeft className="w-4 h-4" />
-              一覧へ戻る
-            </Button>
-          </Link>
-          <div>
-            <h1 className="font-extrabold text-2xl text-gray-900">プレスリリース編集</h1>
-            <p className="text-xs text-gray-500">ID: {pr.id} のプレスリリース内容を編集します</p>
-          </div>
-        </div>
-      </div>
-
       <PRForm initialData={pr} isNew={false} />
     </AdminLayout>
   );
 }
+
