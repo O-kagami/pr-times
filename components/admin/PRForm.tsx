@@ -83,6 +83,11 @@ const SAMPLE_CONTENT = `共働き世帯の“もしも”を支える365日診�
 export default function PRForm({ initialData = {}, isNew = false }: PRFormProps) {
   const router = useRouter();
 
+  // 新規作成（企業未確定）とせせらぎのPRでは、デモ用の初期値をそのまま残す。
+  // 他の企業のPRを編集するときは、せせらぎの内容が紛れ込まないよう空にする。
+  const useDemoDefaults =
+    !initialData.companyId || initialData.companyId === "seseragi";
+
   const [activeMode, setActiveMode] = useState<"press_release" | "yawaraka_pr">("press_release");
   const [viewMode, setViewMode] = useState<"edit" | "preview" | "split">("edit");
   const [modalOpen, setModalOpen] = useState(false);
@@ -96,23 +101,35 @@ export default function PRForm({ initialData = {}, isNew = false }: PRFormProps)
 
   const [title, setTitle] = useState(
     initialData.title ||
-      "共働き世帯の“もしも”を支える365日診療の小児科「あんどこどもクリニック 昭島モリパーク」が9月1日に開院"
+      (useDemoDefaults
+        ? "共働き世帯の“もしも”を支える365日診療の小児科「あんどこどもクリニック 昭島モリパーク」が9月1日に開院"
+        : "")
   );
   const [subtitle, setSubtitle] = useState(
     initialData.subtitle ||
-      "今年9月で200周年を迎えるクリニック！開院に先立ち先着100名へ「あんど探検隊」を開催。"
+      (useDemoDefaults
+        ? "今年9月で200周年を迎えるクリニック！開院に先立ち先着100名へ「あんど探検隊」を開催。"
+        : "")
   );
-  const [company, setCompany] = useState(initialData.company || "医療法人せせらぎ");
-  const [companyId, setCompanyId] = useState(initialData.companyId || "seseragi");
-  const [category, setCategory] = useState(initialData.category || "医療・ヘルスケア");
-  const [subCategory, setSubCategory] = useState(initialData.subCategory || "小児科・地域医療");
+  const [company, setCompany] = useState(
+    initialData.company || (useDemoDefaults ? "医療法人せせらぎ" : "")
+  );
+  const [companyId, setCompanyId] = useState(
+    initialData.companyId || (useDemoDefaults ? "seseragi" : "")
+  );
+  const [category, setCategory] = useState(
+    initialData.category || (useDemoDefaults ? "医療・ヘルスケア" : "")
+  );
+  const [subCategory, setSubCategory] = useState(
+    initialData.subCategory || (useDemoDefaults ? "小児科・地域医療" : "")
+  );
   const [publishedAt, setPublishedAt] = useState(
     initialData.publishedAt || new Date().toISOString().slice(0, 16)
   );
   const [isScheduled, setIsScheduled] = useState(false);
 
   const [imageUrl, setImageUrl] = useState(
-    initialData.imageUrl || SAMPLE_PRESET_IMAGES[1].url
+    initialData.imageUrl || (useDemoDefaults ? SAMPLE_PRESET_IMAGES[1].url : "")
   );
   const [secondaryImages, setSecondaryImages] = useState<string[]>(
     initialData.secondaryImages || []
@@ -121,38 +138,44 @@ export default function PRForm({ initialData = {}, isNew = false }: PRFormProps)
   const [summaryHighlights, setSummaryHighlights] = useState<string[]>(
     initialData.summaryHighlights && initialData.summaryHighlights.length > 0
       ? initialData.summaryHighlights
-      : [
-          "2026年9月1日、東京都昭島市に年中無休（土・日・祝日も一般外来対応）の小児科が開院",
-          "8月29日・30日、親子参加型イベント「あんど探検隊」と院長講演「子どもの誤嚥・窒息」を開催",
-          "共働き世帯の急な受診ニーズに応える診療体制を、地域の保護者の声をもとに構築",
-        ]
+      : useDemoDefaults
+        ? [
+            "2026年9月1日、東京都昭島市に年中無休（土・日・祝日も一般外来対応）の小児科が開院",
+            "8月29日・30日、親子参加型イベント「あんど探検隊」と院長講演「子どもの誤嚥・窒息」を開催",
+            "共働き世帯の急な受診ニーズに応える診療体制を、地域の保護者の声をもとに構築",
+          ]
+        : []
   );
 
-  const [content, setContent] = useState(initialData.content || SAMPLE_CONTENT);
+  const [content, setContent] = useState(
+    initialData.content || (useDemoDefaults ? SAMPLE_CONTENT : "")
+  );
   const [softPrEnabled, setSoftPrEnabled] = useState(!!initialData.softPr || activeMode === "yawaraka_pr");
   const [softPrAuthorName, setSoftPrAuthorName] = useState(
-    initialData.softPr?.author.name || "野崎 彰"
+    initialData.softPr?.author.name || (useDemoDefaults ? "野崎 彰" : "")
   );
   const [softPrAuthorRole, setSoftPrAuthorRole] = useState(
-    initialData.softPr?.author.role || "理事長・院長"
+    initialData.softPr?.author.role || (useDemoDefaults ? "理事長・院長" : "")
   );
 
   const [softNotes, setSoftNotes] = useState<SoftPrNote[]>(
     initialData.softPr?.notes && initialData.softPr.notes.length > 0
       ? initialData.softPr.notes
-      : [
-          {
-            anchor: "土・日・祝日も一般外来に対応する",
-            comment:
-              "この一文は何度も書き直しました。特別このように書くべきか迷いましたが、働くご家庭にとっては一番知りたい情報だと思い、最初に置いています。",
-            imageUrl: SAMPLE_PRESET_IMAGES[1].url,
-          },
-          {
-            anchor: "食品を誤嚥して窒息し死亡した14歳以下の子どもは80名にのぼり、そのうち5歳以下が73名と全体の9割を占めています。",
-            comment:
-              "当院の院長が長年警鐘を鳴らしてきたテーマです。少しでも多くの保護者の方に届くよう、本リリースに盛り込みました。",
-          },
-        ]
+      : useDemoDefaults
+        ? [
+            {
+              anchor: "土・日・祝日も一般外来に対応する",
+              comment:
+                "この一文は何度も書き直しました。特別このように書くべきか迷いましたが、働くご家庭にとっては一番知りたい情報だと思い、最初に置いています。",
+              imageUrl: SAMPLE_PRESET_IMAGES[1].url,
+            },
+            {
+              anchor: "食品を誤嚥して窒息し死亡した14歳以下の子どもは80名にのぼり、そのうち5歳以下が73名と全体の9割を占めています。",
+              comment:
+                "当院の院長が長年警鐘を鳴らしてきたテーマです。少しでも多くの保護者の方に届くよう、本リリースに盛り込みました。",
+            },
+          ]
+        : []
   );
 
   const [selectedText, setSelectedText] = useState("");
@@ -165,11 +188,14 @@ export default function PRForm({ initialData = {}, isNew = false }: PRFormProps)
 
   const [softPrReflection, setSoftPrReflection] = useState<string>(
     initialData.softPr?.reflection?.join("\n\n") ||
-      "開業にあたり、地域の保護者の皆様から「休日に診てくれる小児科が少ない」という切実な声を多数いただきました。\n医療従事者として単に病気を治すだけでなく、忙しいご家族の不安に寄り添える存在を目指して準備を進めてまいりました。"
+      (useDemoDefaults
+        ? "開業にあたり、地域の保護者の皆様から「休日に診てくれる小児科が少ない」という切実な声を多数いただきました。\n医療従事者として単に病気を治すだけでなく、忙しいご家族の不安に寄り添える存在を目指して準備を進めてまいりました。"
+        : "")
   );
 
   const [keywords, setKeywords] = useState<string[]>(
-    initialData.keywords || ["小児科", "昭島市", "年中無休", "地域医療"]
+    initialData.keywords ||
+      (useDemoDefaults ? ["小児科", "昭島市", "年中無休", "地域医療"] : [])
   );
   const [tagInput, setTagInput] = useState("");
 

@@ -179,6 +179,16 @@ export const listCompanyReleases = async (companyId: number): Promise<DbRelease[
 export const toReleaseSlug = (companyId: number, releaseId: number) =>
   `pr-${companyId}-${releaseId}`;
 
+/** "pr-163727-9" から company_id と release_id を取り出す。DBの記事でなければ null */
+export const parseReleaseKey = (
+  slug: string
+): { companyId: number; releaseId: number } | null => {
+  const match = slug.match(/^pr-(\d+)-(\d+)$/);
+  return match
+    ? { companyId: Number(match[1]), releaseId: Number(match[2]) }
+    : null;
+};
+
 /** "pr-163727-9" や "9" から release_id を取り出す。DBの記事でなければ null */
 export const parseReleaseSlug = (companyId: number, slug: string): number | null => {
   const match =
