@@ -5,7 +5,7 @@ import { db } from "@/lib/db";
  * 「似た企業のサジェスト」と「近しい企業のリリースカレンダー」で使う。
  *
  * 同じ業種（company.industry_id）を候補とし、都道府県・発信キーワード・
- * 資本金・上場区分・設立時期・発信ペース・新しさを使って近さを比べる。
+ * 資本金・上場区分・設立時期・新しさを使って近さを比べる。
  * company テーブルに都道府県のカラムは無いので address の前方一致で絞る。
  */
 
@@ -55,7 +55,6 @@ interface PeerQuery {
   since: Date;
   limit: number;
   targetKeywords?: string[];
-  targetReleaseCount?: number;
   companyIds?: number[];
 }
 
@@ -65,13 +64,6 @@ export type PeerScope = "prefecture" | "nationwide";
 const parseFoundationYear = (value: string | null | undefined): number | null => {
   const year = Number(value?.match(/^(\d{4})/)?.[1]);
   return Number.isFinite(year) && year > 0 ? year : null;
-};
-
-const ratioSimilarity = (left: number, right: number) => {
-  if (left <= 0 || right <= 0) {
-    return 0;
-  }
-  return Math.min(left, right) / Math.max(left, right);
 };
 
 /** 資本金は桁の近さを見る。100倍以上離れていれば類似度を0にする。 */
@@ -93,7 +85,6 @@ export const listPeerCompanies = async ({
   since,
   limit,
   targetKeywords = [],
-  targetReleaseCount = 0,
 }: PeerQuery): Promise<{ scope: PeerScope; peers: PeerCompany[] }> => {
   const fetchPeers = async (withPrefecture: boolean) => {
     let query = db
@@ -140,20 +131,14 @@ export const listPeerCompanies = async ({
   }
 
   // まず発信の新しい企業に候補を絞り、その中で企業属性と発信内容を比較する。
-  // 全候補のキーワードを読むと重くなるため、表示件数に応じて候補数に上限を設ける。
+  // 各社の最新リリースだけを読むため、表示件数に応じて候補数にも上限を設ける。
   const candidates = rows
     .sort((a, b) => b.created_at.getTime() - a.created_at.getTime())
-    .slice(0, Math.max(64, limit * 12));
+    .slice(0, Math.max(24, limit * 4));
 
   if (candidates.length === 0) {
     return { scope, peers: [] };
   }
-
-  const candidateIds = candidates.map((row) => row.company_id);
-  const signalCompanyIds =
-    excludeCompanyId === null
-      ? candidateIds
-      : [...new Set([...candidateIds, excludeCompanyId])];
 
   const targetCompanyPromise =
     excludeCompanyId === null
@@ -164,35 +149,24 @@ export const listPeerCompanies = async ({
           .where("company_id", "=", excludeCompanyId)
           .executeTakeFirst();
 
-  const [targetCompany, recentReleases, keywordRows] = await Promise.all([
+  const [targetCompany, keywordRows] = await Promise.all([
     targetCompanyPromise,
     db
-      .selectFrom("release")
-      .select(["company_id", "release_id"])
-      .where("company_id", "in", signalCompanyIds)
-      .where("created_at", ">=", since)
-      .execute(),
-    db
       .selectFrom("release_keyword")
-      .innerJoin("release", (join) =>
-        join
-          .onRef("release.company_id", "=", "release_keyword.company_id")
-          .onRef("release.release_id", "=", "release_keyword.release_id")
-      )
       .innerJoin("keyword", "keyword.keyword_id", "release_keyword.keyword_id")
       .select(["release_keyword.company_id", "keyword.keyword_name"])
-      .where("release_keyword.company_id", "in", signalCompanyIds)
-      .where("release.created_at", ">=", since)
+      .where((eb) =>
+        eb.or(
+          candidates.map((candidate) =>
+            eb.and([
+              eb("release_keyword.company_id", "=", candidate.company_id),
+              eb("release_keyword.release_id", "=", candidate.release_id),
+            ])
+          )
+        )
+      )
       .execute(),
   ]);
-
-  const releaseCounts = new Map<number, number>();
-  recentReleases.forEach((release) => {
-    releaseCounts.set(
-      release.company_id,
-      (releaseCounts.get(release.company_id) ?? 0) + 1
-    );
-  });
 
   const keywordCounts = new Map<number, Map<string, number>>();
   keywordRows.forEach((row) => {
@@ -208,16 +182,6 @@ export const listPeerCompanies = async ({
   const normalizedTargetKeywords = new Set(
     targetKeywords.map((keyword) => keyword.trim()).filter(Boolean)
   );
-  if (excludeCompanyId !== null) {
-    keywordCounts.get(excludeCompanyId)?.forEach((_, keyword) => {
-      normalizedTargetKeywords.add(keyword);
-    });
-  }
-
-  const resolvedTargetReleaseCount =
-    excludeCompanyId === null
-      ? targetReleaseCount
-      : Math.max(targetReleaseCount, releaseCounts.get(excludeCompanyId) ?? 0);
   const targetFoundationYear = parseFoundationYear(targetCompany?.foundation_date);
   const rankingAt = new Date();
   const windowMs = Math.max(1, rankingAt.getTime() - since.getTime());
@@ -250,7 +214,7 @@ export const listPeerCompanies = async ({
 
     if (normalizedTargetKeywords.size > 0) {
       const unionSize = new Set([...normalizedTargetKeywords, ...peerKeywords]).size;
-      addSignal(40, unionSize > 0 ? commonKeywords.length / unionSize : 0);
+      addSignal(50, unionSize > 0 ? commonKeywords.length / unionSize : 0);
       if (commonKeywords.length > 0) {
         reasons.push(`「${commonKeywords.slice(0, 2).join("・")}」の発信が共通`);
       }
@@ -287,15 +251,6 @@ export const listPeerCompanies = async ({
         1 - Math.abs(targetFoundationYear - peerFoundationYear) / 30
       );
       addSignal(5, similarity);
-    }
-
-    const peerReleaseCount = releaseCounts.get(row.company_id) ?? 0;
-    if (resolvedTargetReleaseCount > 0 && peerReleaseCount > 0) {
-      const similarity = ratioSimilarity(resolvedTargetReleaseCount, peerReleaseCount);
-      addSignal(10, similarity);
-      if (similarity >= 0.65) {
-        reasons.push("発信ペースが近い");
-      }
     }
 
     const releaseAgeMs = Math.max(0, rankingAt.getTime() - row.created_at.getTime());

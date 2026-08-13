@@ -46,14 +46,14 @@ export function PeerCompanies({
           <div>
             <p className="font-bold text-[#4a332b] text-[12px]">発信のヒント</p>
             <p className="mt-0.5 text-[#7a5c4d] text-[12px] leading-relaxed">
-              似た会社では
+              似た会社の最近のリリースでは
               {frequentTopics.map((topic, index) => (
                 <React.Fragment key={topic}>
                   {index > 0 && "、"}
                   <span className="font-bold">「{topic}」</span>
                 </React.Fragment>
               ))}
-              がよく発信されています。
+              が目立ちます。
             </p>
           </div>
         </div>
@@ -115,7 +115,7 @@ export function PeerCompanies({
                 {peer.topics.length > 0 && (
                   <p className="flex items-start gap-1 mt-2 text-[#a06f59] text-[10px] leading-relaxed">
                     <Tags className="mt-0.5 w-3 h-3 shrink-0" aria-hidden="true" />
-                    <span>よく発信：{peer.topics.join("・")}</span>
+                    <span>最近のテーマ：{peer.topics.join("・")}</span>
                   </p>
                 )}
 
