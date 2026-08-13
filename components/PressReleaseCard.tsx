@@ -16,7 +16,7 @@ export const PressReleaseCard: React.FC<PressReleaseCardProps> = ({
 }) => {
   return (
     <Link
-      href={`/press/${release.id}`}
+      href={`/companies/${release.companyId}/releases/${release.id}`}
       onClick={onClick}
       className="group cursor-pointer bg-white p-3.5 rounded border border-gray-200 hover:border-sky-300 hover:shadow-md transition-all duration-200 flex flex-col sm:flex-row gap-3 justify-between items-start"
     >
