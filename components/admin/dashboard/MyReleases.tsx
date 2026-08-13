@@ -9,7 +9,13 @@ const formatDate = (date: Date) =>
   );
 
 /** 自分たちが出したPRの一覧。文字より写真が先に目に入るようにカードで並べる */
-export function MyReleases({ releases }: { releases: AdminRelease[] }) {
+export function MyReleases({
+  companyId,
+  releases,
+}: {
+  companyId: string;
+  releases: AdminRelease[];
+}) {
   return (
     <section>
       <div className="flex justify-between items-end mb-3">
@@ -20,7 +26,7 @@ export function MyReleases({ releases }: { releases: AdminRelease[] }) {
           </p>
         </div>
         <Link
-          href="/admin/press-releases/new"
+          href={`/admin/companies/${companyId}/press-releases/new`}
           className="hidden sm:flex items-center gap-1.5 bg-[#e0714c] hover:bg-[#cf6242] px-3.5 py-2 rounded-full font-bold text-white text-[12px] transition-colors"
         >
           <PenLine className="w-3.5 h-3.5" />

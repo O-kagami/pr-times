@@ -61,6 +61,8 @@ import {
 type PRFormProps = {
   initialData?: Partial<PressRelease>;
   isNew?: boolean;
+  /** 保存後・キャンセル時の戻り先。企業ごとの管理画面から開いたときはその一覧に戻す */
+  returnHref?: string;
 };
 
 const SAMPLE_PRESET_IMAGES = [
@@ -80,7 +82,11 @@ const SAMPLE_CONTENT = `共働き世帯の“もしも”を支える365日診�
 ■開院の背景
 消費者庁が厚生労働省「人口動態調査」を分析した結果によると、平成26年から令和元年までの6年間で、食品を誤嚥して窒息し死亡した14歳以下の子どもは80名にのぼり、そのうち5歳以下が73名と全体の9割を占めています。誤嚥・窒息は、家庭内で誰にでも起こり得る身近な事故です。`;
 
-export default function PRForm({ initialData = {}, isNew = false }: PRFormProps) {
+export default function PRForm({
+  initialData = {},
+  isNew = false,
+  returnHref = "/admin/press-releases",
+}: PRFormProps) {
   const router = useRouter();
 
   // 新規作成（企業未確定）とせせらぎのPRでは、デモ用の初期値をそのまま残す。
@@ -347,7 +353,7 @@ export default function PRForm({ initialData = {}, isNew = false }: PRFormProps)
           : "プレスリリースを正常に保存しました！"
       );
       setTimeout(() => {
-        router.push("/admin/press-releases");
+        router.push(returnHref);
       }, 1200);
     } catch (error) {
       console.error("Failed to save press release", error);
@@ -416,7 +422,7 @@ export default function PRForm({ initialData = {}, isNew = false }: PRFormProps)
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-gray-200 px-4 py-2.5 flex items-center justify-between shadow-xs">
         <div className="flex items-center gap-3">
           <Link
-            href="/admin/press-releases"
+            href={returnHref}
             className="flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors px-2 py-1 rounded-md hover:bg-gray-100"
           >
             <X className="w-4 h-4 text-gray-500" />

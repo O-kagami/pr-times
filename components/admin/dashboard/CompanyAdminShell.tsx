@@ -37,8 +37,16 @@ export function CompanyAdminShell({
       icon: LayoutDashboard,
     },
     { title: "ヒストリー", href: `${publicBase}/history`, icon: History },
-    { title: "プレスリリース", href: "/admin/press-releases", icon: Newspaper },
-    { title: "新規作成", href: "/admin/press-releases/new", icon: PenLine },
+    {
+      title: "プレスリリース",
+      href: `/admin/companies/${companyId}/press-releases`,
+      icon: Newspaper,
+    },
+    {
+      title: "新規作成",
+      href: `/admin/companies/${companyId}/press-releases/new`,
+      icon: PenLine,
+    },
   ];
 
   return (

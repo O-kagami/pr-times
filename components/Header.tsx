@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useState } from "react";
-import { Search, Mail, User, Menu, X } from "lucide-react";
+import { Search, Mail, User, Menu, X, ChevronDown, Building2 } from "lucide-react";
 import Link from "next/link";
+import { ADMIN_COMPANIES, getCompanyAdminHref } from "@/lib/companyLinks";
 
 interface HeaderProps {
   searchQuery: string;
@@ -11,6 +12,7 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({ searchQuery, onSearchChange }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [adminMenuOpen, setAdminMenuOpen] = useState(false);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,12 +52,42 @@ export const Header: React.FC<HeaderProps> = ({ searchQuery, onSearchChange }) =
             <span>ログイン</span>
           </a>
 
-          <a
-            href="/admin"
-            className="flex items-center gap-1 bg-[#ffd24d] hover:bg-[#ffcf3b] px-3 py-1.5 border border-[#e0b93b] rounded font-medium text-[#1b1b1b] text-xs transition-colors"
-          >
-            <span>管理画面</span>
-          </a>
+          {/* 管理画面は企業ごとに分かれているので、開いて企業を選ぶ */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setAdminMenuOpen(!adminMenuOpen)}
+              aria-expanded={adminMenuOpen}
+              className="flex items-center gap-1 bg-[#ffd24d] hover:bg-[#ffcf3b] px-3 py-1.5 border border-[#e0b93b] rounded font-medium text-[#1b1b1b] text-xs transition-colors"
+            >
+              <span>管理画面</span>
+              <ChevronDown
+                className={`w-3.5 h-3.5 transition-transform ${adminMenuOpen ? "rotate-180" : ""}`}
+              />
+            </button>
+
+            {adminMenuOpen && (
+              <div className="right-0 z-50 absolute bg-white shadow-xl mt-1.5 border border-gray-200 rounded w-60 overflow-hidden">
+                <p className="bg-gray-50 px-3 py-2 border-gray-100 border-b text-[10px] text-gray-500">
+                  企業を選んで管理画面へ
+                </p>
+                <ul>
+                  {ADMIN_COMPANIES.map((company) => (
+                    <li key={company.id}>
+                      <Link
+                        href={getCompanyAdminHref(company.id)}
+                        onClick={() => setAdminMenuOpen(false)}
+                        className="flex items-center gap-2 hover:bg-sky-50 px-3 py-2.5 border-gray-100 border-b last:border-b-0 text-gray-800 text-xs transition-colors"
+                      >
+                        <Building2 className="w-3.5 h-3.5 text-[#0066cc] shrink-0" />
+                        {company.name}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
 
           {/* Search form */}
           <form onSubmit={handleSearchSubmit} className="relative flex items-center w-64">
@@ -120,12 +152,37 @@ export const Header: React.FC<HeaderProps> = ({ searchQuery, onSearchChange }) =
           >
             企業様ログイン・配信申し込み
           </a>
-          <a
-            href="/admin"
-            className="block py-2 font-medium text-yellow-300 text-sm"
+          <button
+            type="button"
+            onClick={() => setAdminMenuOpen(!adminMenuOpen)}
+            aria-expanded={adminMenuOpen}
+            className="flex justify-between items-center py-2 w-full font-medium text-yellow-300 text-sm"
           >
             管理画面
-          </a>
+            <ChevronDown
+              className={`w-4 h-4 transition-transform ${adminMenuOpen ? "rotate-180" : ""}`}
+            />
+          </button>
+
+          {adminMenuOpen && (
+            <ul className="bg-[#0d1b2e] rounded overflow-hidden">
+              {ADMIN_COMPANIES.map((company) => (
+                <li key={company.id}>
+                  <Link
+                    href={getCompanyAdminHref(company.id)}
+                    onClick={() => {
+                      setAdminMenuOpen(false);
+                      setMobileMenuOpen(false);
+                    }}
+                    className="flex items-center gap-2 px-3 py-2.5 border-gray-700/50 border-b last:border-b-0 text-gray-200 text-sm"
+                  >
+                    <Building2 className="w-4 h-4 text-sky-400 shrink-0" />
+                    {company.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       )}
     </header>

@@ -1,5 +1,6 @@
 import React from "react";
 import { notFound } from "next/navigation";
+import { CompanyAdminShell } from "@/components/admin/dashboard/CompanyAdminShell";
 import { MilestoneHero } from "@/components/admin/dashboard/MilestoneHero";
 import { MyReleases } from "@/components/admin/dashboard/MyReleases";
 import { HistoryInvite } from "@/components/admin/dashboard/HistoryInvite";
@@ -86,24 +87,30 @@ export default async function CompanyAdminDashboard({
       : `全国の${company.industryName}`;
 
   return (
-    <div className="flex flex-col gap-8 sm:gap-10">
-      <MilestoneHero company={company} milestones={milestones} />
+    <CompanyAdminShell
+      companyId={companyId}
+      companyName={company.name}
+      industryName={company.industryName}
+    >
+      <div className="flex flex-col gap-8 sm:gap-10">
+        <MilestoneHero company={company} milestones={milestones} />
 
-      <MyReleases releases={company.releases} />
+        <MyReleases companyId={companyId} releases={company.releases} />
 
-      <HistoryInvite
-        companyId={companyId}
-        releases={company.releases}
-        yearsLabel={formatSpan(milestones.daysSinceFirst)}
-      />
+        <HistoryInvite
+          companyId={companyId}
+          releases={company.releases}
+          yearsLabel={formatSpan(milestones.daysSinceFirst)}
+        />
 
-      <PeerCompanies peers={peers} scopeLabel={scopeLabel} />
+        <PeerCompanies peers={peers} scopeLabel={scopeLabel} />
 
-      <PeerCalendar
-        entries={calendarEntries}
-        todayKey={toDateKey(now)}
-        scopeLabel={scopeLabel}
-      />
-    </div>
+        <PeerCalendar
+          entries={calendarEntries}
+          todayKey={toDateKey(now)}
+          scopeLabel={scopeLabel}
+        />
+      </div>
+    </CompanyAdminShell>
   );
 }
