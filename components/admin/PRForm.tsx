@@ -12,7 +12,10 @@ import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
+import { Dialog, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Toggle } from "@/components/ui/toggle";
 import { CATEGORIES, PressRelease, SoftPrNote, TRENDING_KEYWORDS } from "@/data/pressReleases";
+
 import PRQualityScore from "@/components/admin/PRQualityScore";
 import PRPreviewModal from "@/components/admin/PRPreviewModal";
 import { AnnotatedContent } from "@/components/AnnotatedContent";
@@ -21,7 +24,6 @@ import {
   Send,
   Image as ImageIcon,
   Plus,
-  Sparkles,
   Tag,
   Calendar,
   Building,
@@ -33,7 +35,6 @@ import {
   HelpCircle,
   Command,
   MessageSquare,
-  Wand2,
   Music,
   Link2,
   File,
@@ -51,11 +52,10 @@ import {
   Sliders,
   Heart,
   Volume2,
-  FileCode,
-  Smile,
   Trash2,
   MessageSquarePlus,
   Highlighter,
+  Edit3,
 } from "lucide-react";
 
 type PRFormProps = {
@@ -83,27 +83,17 @@ const SAMPLE_CONTENT = `共働き世帯の“もしも”を支える365日診�
 export default function PRForm({ initialData = {}, isNew = false }: PRFormProps) {
   const router = useRouter();
 
-  // Mode state: "press_release" | "yawaraka_pr"
   const [activeMode, setActiveMode] = useState<"press_release" | "yawaraka_pr">("press_release");
-
-  // View state: edit | preview | split
   const [viewMode, setViewMode] = useState<"edit" | "preview" | "split">("edit");
   const [modalOpen, setModalOpen] = useState(false);
   const [optionsMenuOpen, setOptionsMenuOpen] = useState(false);
   const [savedToast, setSavedToast] = useState<string | null>(null);
   const [lastSavedTime, setLastSavedTime] = useState<string>("保存済み");
 
-  // Left Rail Active Panel: null | "ai" | "toc" | "score" | "settings" | "help"
   const [activeSidePanel, setActiveSidePanel] = useState<string | null>(null);
-  const [showAiBanner, setShowAiBanner] = useState(true);
-
-  // Block Insertion Popup Menu
   const [blockMenuOpen, setBlockMenuOpen] = useState(false);
-
-  // Image Modal
   const [showImagePicker, setShowImagePicker] = useState(false);
 
-  // Main Form fields (Identical text across both modes)
   const [title, setTitle] = useState(
     initialData.title ||
       "共働き世帯の“もしも”を支える365日診療の小児科「あんどこどもクリニック 昭島モリパーク」が9月1日に開院"
@@ -128,7 +118,6 @@ export default function PRForm({ initialData = {}, isNew = false }: PRFormProps)
     initialData.secondaryImages || []
   );
 
-  // Summary highlights (3 points)
   const [summaryHighlights, setSummaryHighlights] = useState<string[]>(
     initialData.summaryHighlights && initialData.summaryHighlights.length > 0
       ? initialData.summaryHighlights
@@ -139,10 +128,7 @@ export default function PRForm({ initialData = {}, isNew = false }: PRFormProps)
         ]
   );
 
-  // Main Content (Identical in both Press Release & Yawaraka PR modes)
   const [content, setContent] = useState(initialData.content || SAMPLE_CONTENT);
-
-  // Soft PR specific state (Supplementary overlay notes & commentary)
   const [softPrEnabled, setSoftPrEnabled] = useState(!!initialData.softPr || activeMode === "yawaraka_pr");
   const [softPrAuthorName, setSoftPrAuthorName] = useState(
     initialData.softPr?.author.name || "野崎 彰"
@@ -151,7 +137,6 @@ export default function PRForm({ initialData = {}, isNew = false }: PRFormProps)
     initialData.softPr?.author.role || "理事長・院長"
   );
 
-  // Soft PR Annotations (マーカー注釈)
   const [softNotes, setSoftNotes] = useState<SoftPrNote[]>(
     initialData.softPr?.notes && initialData.softPr.notes.length > 0
       ? initialData.softPr.notes
@@ -160,6 +145,7 @@ export default function PRForm({ initialData = {}, isNew = false }: PRFormProps)
             anchor: "土・日・祝日も一般外来に対応する",
             comment:
               "この一文は何度も書き直しました。特別このように書くべきか迷いましたが、働くご家庭にとっては一番知りたい情報だと思い、最初に置いています。",
+            imageUrl: SAMPLE_PRESET_IMAGES[1].url,
           },
           {
             anchor: "食品を誤嚥して窒息し死亡した14歳以下の子どもは80名にのぼり、そのうち5歳以下が73名と全体の9割を占めています。",
@@ -169,22 +155,24 @@ export default function PRForm({ initialData = {}, isNew = false }: PRFormProps)
         ]
   );
 
-  // Form for adding new Soft PR note
-  const [newAnchor, setNewAnchor] = useState("");
-  const [newComment, setNewComment] = useState("");
+  const [selectedText, setSelectedText] = useState("");
+  const [isHighlightMode, setIsHighlightMode] = useState(true);
+  const [editingNote, setEditingNote] = useState<SoftPrNote | null>(null);
+
+  const [editingNoteIndex, setEditingNoteIndex] = useState<number | null>(null);
+  const [editComment, setEditComment] = useState("");
+  const [editImageUrl, setEditImageUrl] = useState("");
 
   const [softPrReflection, setSoftPrReflection] = useState<string>(
     initialData.softPr?.reflection?.join("\n\n") ||
       "開業にあたり、地域の保護者の皆様から「休日に診てくれる小児科が少ない」という切実な声を多数いただきました。\n医療従事者として単に病気を治すだけでなく、忙しいご家族の不安に寄り添える存在を目指して準備を進めてまいりました。"
   );
 
-  // Keywords
   const [keywords, setKeywords] = useState<string[]>(
     initialData.keywords || ["小児科", "昭島市", "年中無休", "地域医療"]
   );
   const [tagInput, setTagInput] = useState("");
 
-  // Contact & Profile
   const [contactDepartment, setContactDepartment] = useState(
     initialData.contactInfo?.department || "医療法人せせらぎ 広報事務局"
   );
@@ -211,12 +199,6 @@ export default function PRForm({ initialData = {}, isNew = false }: PRFormProps)
     initialData.companyProfile?.website || "https://seseragi-med.or.jp"
   );
 
-  // Distribution options
-  const [distributeWeb, setDistributeWeb] = useState(true);
-  const [distributePartners, setDistributePartners] = useState(true);
-  const [distributeSns, setDistributeSns] = useState(true);
-
-  // Auto-save simulator
   useEffect(() => {
     const timer = setTimeout(() => {
       const now = new Date();
@@ -230,48 +212,79 @@ export default function PRForm({ initialData = {}, isNew = false }: PRFormProps)
     return () => clearTimeout(timer);
   }, [title, subtitle, content, keywords, imageUrl]);
 
-  // Insert Snippet into Body
   const insertSnippet = (snippet: string) => {
     setContent((prev) => (prev ? prev + "\n" + snippet : snippet));
     setBlockMenuOpen(false);
   };
 
-  // Add Soft PR note handler
-  const handleAddSoftNote = () => {
-    if (!newAnchor.trim() || !newComment.trim()) return;
-    setSoftNotes([
-      ...softNotes,
-      { anchor: newAnchor.trim(), comment: newComment.trim() },
-    ]);
-    setNewAnchor("");
-    setNewComment("");
-    setSavedToast("「広報担当より」マーカー注釈を追加しました！");
+  const handleDetectSelection = (e: React.SyntheticEvent) => {
+    if (activeMode !== "yawaraka_pr") return;
+    const target = e.currentTarget as HTMLTextAreaElement;
+    if (target.selectionStart !== undefined && target.selectionEnd !== undefined) {
+      const start = target.selectionStart;
+      const end = target.selectionEnd;
+      if (end - start > 1) {
+        const text = target.value.substring(start, end).trim();
+        if (text) setSelectedText(text);
+        return;
+      }
+    }
+    const sel = window.getSelection();
+    if (sel && sel.toString().trim().length > 1) {
+      setSelectedText(sel.toString().trim());
+    }
+  };
+
+  const handleHighlightSelectedText = () => {
+    if (!selectedText) return;
+    const newNote: SoftPrNote = {
+      anchor: selectedText,
+      comment: "",
+      imageUrl: "",
+    };
+    setSoftNotes((prev) => [...prev, newNote]);
+    setSelectedText("");
+    handleOpenEditNoteModal(newNote, softNotes.length);
+  };
+
+  const handleOpenEditNoteModal = (note: SoftPrNote, index?: number) => {
+    const noteIdx = index !== undefined ? index : softNotes.findIndex((n) => n.anchor === note.anchor);
+    setEditingNote(note);
+    setEditingNoteIndex(noteIdx !== -1 ? noteIdx : null);
+    setEditComment(note.comment || "");
+    setEditImageUrl(note.imageUrl || "");
+  };
+
+  const handleSaveEditedNote = () => {
+    if (!editingNote) return;
+    const updatedNote: SoftPrNote = {
+      anchor: editingNote.anchor,
+      comment: editComment,
+      imageUrl: editImageUrl ? editImageUrl : undefined,
+    };
+
+    if (editingNoteIndex !== null && editingNoteIndex >= 0) {
+      const updated = [...softNotes];
+      updated[editingNoteIndex] = updatedNote;
+      setSoftNotes(updated);
+    } else {
+      setSoftNotes([...softNotes, updatedNote]);
+    }
+
+    setEditingNote(null);
+    setEditingNoteIndex(null);
+    setSavedToast("ポップアップカードの文章と画像を保存しました！");
     setTimeout(() => setSavedToast(null), 2500);
   };
 
-  const handleRemoveSoftNote = (index: number) => {
-    setSoftNotes(softNotes.filter((_, i) => i !== index));
-  };
-
-  // Keywords Handlers
-  const handleAddKeyword = () => {
-    if (tagInput.trim() && !keywords.includes(tagInput.trim())) {
-      setKeywords([...keywords, tagInput.trim()]);
-      setTagInput("");
+  const handleDeleteEditedNote = () => {
+    if (editingNoteIndex !== null && editingNoteIndex >= 0) {
+      setSoftNotes(softNotes.filter((_, i) => i !== editingNoteIndex));
     }
+    setEditingNote(null);
+    setEditingNoteIndex(null);
   };
 
-  const handleRemoveKeyword = (tagToRemove: string) => {
-    setKeywords(keywords.filter((k) => k !== tagToRemove));
-  };
-
-  const handleQuickAddKeyword = (kw: string) => {
-    if (!keywords.includes(kw)) {
-      setKeywords([...keywords, kw]);
-    }
-  };
-
-  // Submit Handler
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
     setSavedToast(
@@ -284,17 +297,14 @@ export default function PRForm({ initialData = {}, isNew = false }: PRFormProps)
     }, 1200);
   };
 
-  // Extract table of contents headings
   const tocHeadings = (title ? [`# ${title}`] : []).concat(
     content
       .split("\n")
       .filter((line) => line.startsWith("# ") || line.startsWith("## ") || line.startsWith("### "))
   );
 
-  // Character Count
   const totalCharCount = title.length + subtitle.length + content.length;
 
-  // Current Form Object for Quality score & Preview
   const currentFormData = {
     id: initialData.id || `pr-${Date.now().toString().slice(-4)}`,
     title: title || "無題のプレスリリース",
@@ -337,7 +347,6 @@ export default function PRForm({ initialData = {}, isNew = false }: PRFormProps)
 
   return (
     <div className="min-h-screen bg-[#f9fafb] text-gray-900 flex flex-col -m-6 font-sans">
-      {/* Toast Notification */}
       {savedToast && (
         <div className="fixed top-5 right-5 z-50 flex items-center gap-2 bg-emerald-600 text-white px-4 py-3 rounded-lg shadow-xl text-sm font-medium animate-in fade-in slide-in-from-top-3">
           <CheckCircle className="w-5 h-5 text-white" />
@@ -345,9 +354,7 @@ export default function PRForm({ initialData = {}, isNew = false }: PRFormProps)
         </div>
       )}
 
-      {/* Note-style Top Header Bar */}
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-gray-200 px-4 py-2.5 flex items-center justify-between shadow-xs">
-        {/* Left: Close Link */}
         <div className="flex items-center gap-3">
           <Link
             href="/admin/press-releases"
@@ -362,7 +369,6 @@ export default function PRForm({ initialData = {}, isNew = false }: PRFormProps)
           </span>
         </div>
 
-        {/* Center: Mode Switching Tabs */}
         <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-xl border border-gray-200/80 shadow-inner">
           <button
             type="button"
@@ -393,67 +399,19 @@ export default function PRForm({ initialData = {}, isNew = false }: PRFormProps)
           </button>
         </div>
 
-        {/* Right: Character Count, Options & Save/Publish */}
         <div className="flex items-center gap-3">
           <span className="text-xs font-medium text-gray-500 hidden md:inline">
             {totalCharCount} 文字
           </span>
-
-          {/* Options Menu Button */}
           <div className="relative">
             <button
               type="button"
               onClick={() => setOptionsMenuOpen(!optionsMenuOpen)}
               className="p-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
-              title="その他の操作"
             >
               <MoreHorizontal className="w-5 h-5" />
             </button>
-
-            {optionsMenuOpen && (
-              <div className="absolute right-0 top-full mt-2 w-56 bg-white border border-gray-200 rounded-xl shadow-xl z-50 py-1.5 text-xs text-gray-700 animate-in fade-in slide-in-from-top-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setViewMode(viewMode === "preview" ? "edit" : "preview");
-                    setOptionsMenuOpen(false);
-                  }}
-                  className="w-full text-left px-3.5 py-2 hover:bg-gray-100 flex items-center justify-between cursor-pointer"
-                >
-                  <span className="flex items-center gap-2">
-                    <Eye className="w-4 h-4 text-sky-600" />
-                    プレビュー切り替え
-                  </span>
-                  <span className="text-[10px] text-gray-400">⌘P</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setModalOpen(true);
-                    setOptionsMenuOpen(false);
-                  }}
-                  className="w-full text-left px-3.5 py-2 hover:bg-gray-100 flex items-center gap-2 cursor-pointer"
-                >
-                  <Columns className="w-4 h-4 text-emerald-600" />
-                  確認ダイアログ表示
-                </button>
-                <Separator className="my-1" />
-                <button
-                  type="button"
-                  onClick={() => {
-                    setActiveSidePanel(activeSidePanel === "settings" ? null : "settings");
-                    setOptionsMenuOpen(false);
-                  }}
-                  className="w-full text-left px-3.5 py-2 hover:bg-gray-100 flex items-center gap-2 cursor-pointer"
-                >
-                  <Sliders className="w-4 h-4 text-gray-600" />
-                  配信詳細設定
-                </button>
-              </div>
-            )}
           </div>
-
-          {/* Save Draft Button */}
           <Button
             type="button"
             variant="outline"
@@ -473,8 +431,6 @@ export default function PRForm({ initialData = {}, isNew = false }: PRFormProps)
           >
             下書き保存
           </Button>
-
-          {/* Main Action Button */}
           <Button
             type="button"
             onClick={handleSave}
@@ -490,53 +446,8 @@ export default function PRForm({ initialData = {}, isNew = false }: PRFormProps)
         </div>
       </header>
 
-      {/* Main Workspace Body: Left Rail + Canvas + Right Panel */}
       <div className="flex-1 flex overflow-hidden relative">
-        {/* Note-style Far-Left Vertical Icon Rail */}
         <aside className="w-14 bg-white border-r border-gray-200 flex flex-col items-center py-4 space-y-4 shrink-0 z-20">
-          {/* AI Assistant Icon Button */}
-          <div className="relative group">
-            <button
-              type="button"
-              onClick={() => setActiveSidePanel(activeSidePanel === "ai" ? null : "ai")}
-              className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all cursor-pointer ${
-                activeSidePanel === "ai"
-                  ? "bg-emerald-100 text-emerald-700 ring-2 ring-emerald-400"
-                  : "bg-emerald-50 text-emerald-600 hover:bg-emerald-100"
-              }`}
-              title="AIアシスタント"
-            >
-              <Sparkles className="w-5 h-5 fill-current" />
-            </button>
-
-            {/* Note Speech Bubble Banner */}
-            {showAiBanner && activeSidePanel !== "ai" && (
-              <div className="absolute left-14 top-0 z-50 w-64 bg-gray-900 text-white text-xs rounded-xl p-3 shadow-xl border border-gray-800 animate-in fade-in slide-in-from-left-2">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex items-center gap-1.5 font-bold text-emerald-400 mb-1">
-                    <Sparkles className="w-3.5 h-3.5" />
-                    <span>AIアシスタント機能</span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setShowAiBanner(false);
-                    }}
-                    className="text-gray-400 hover:text-white"
-                  >
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-                <p className="text-gray-300 text-[11px] leading-relaxed">
-                  AIと構成づくりや推敲を一緒に進められます
-                </p>
-                <div className="absolute left-[-6px] top-4 w-3 h-3 bg-gray-900 transform rotate-45" />
-              </div>
-            )}
-          </div>
-
-          {/* Table of Contents Icon */}
           <button
             type="button"
             onClick={() => setActiveSidePanel(activeSidePanel === "toc" ? null : "toc")}
@@ -545,12 +456,9 @@ export default function PRForm({ initialData = {}, isNew = false }: PRFormProps)
                 ? "bg-sky-100 text-sky-700 ring-2 ring-sky-400"
                 : "text-gray-500 hover:bg-gray-100 hover:text-gray-900"
             }`}
-            title="目次・構成一覧"
           >
             <List className="w-5 h-5" />
           </button>
-
-          {/* PR Quality Score Icon */}
           <button
             type="button"
             onClick={() => setActiveSidePanel(activeSidePanel === "score" ? null : "score")}
@@ -559,12 +467,9 @@ export default function PRForm({ initialData = {}, isNew = false }: PRFormProps)
                 ? "bg-amber-100 text-amber-700 ring-2 ring-amber-400"
                 : "text-gray-500 hover:bg-gray-100 hover:text-gray-900"
             }`}
-            title="PR品質スコア"
           >
             <Sliders className="w-5 h-5" />
           </button>
-
-          {/* Mode Settings Icon */}
           <button
             type="button"
             onClick={() => setActiveSidePanel(activeSidePanel === "settings" ? null : "settings")}
@@ -573,48 +478,28 @@ export default function PRForm({ initialData = {}, isNew = false }: PRFormProps)
                 ? "bg-purple-100 text-purple-700 ring-2 ring-purple-400"
                 : "text-gray-500 hover:bg-gray-100 hover:text-gray-900"
             }`}
-            title="リリース属性・設定"
           >
             <Tag className="w-5 h-5" />
           </button>
-
           <div className="flex-1" />
-
-          {/* Help Icon */}
           <button
             type="button"
             onClick={() => setActiveSidePanel(activeSidePanel === "help" ? null : "help")}
             className="w-10 h-10 rounded-xl text-gray-400 hover:text-gray-700 hover:bg-gray-100 flex items-center justify-center transition-colors cursor-pointer"
-            title="ヘルプ・ガイド"
           >
             <HelpCircle className="w-5 h-5" />
           </button>
-
-          {/* Keyboard Shortcuts Icon */}
-          <button
-            type="button"
-            onClick={() =>
-              alert("【ショートカット】\n⌘+S: 下書き保存\n⌘+P: プレビュー切替\n⌘+B: 太字")
-            }
-            className="w-10 h-10 rounded-xl text-gray-400 hover:text-gray-700 hover:bg-gray-100 flex items-center justify-center transition-colors cursor-pointer"
-            title="キーボードショートカット"
-          >
-            <Command className="w-5 h-5" />
-          </button>
         </aside>
 
-        {/* Collapsible Left Side Panel Drawer */}
         {activeSidePanel && (
           <aside className="w-72 bg-white border-r border-gray-200 p-4 space-y-4 shrink-0 overflow-y-auto z-10 animate-in fade-in slide-in-from-left-4">
             <div className="flex items-center justify-between border-b pb-2">
               <h3 className="font-bold text-sm text-gray-800 flex items-center gap-2">
-                {activeSidePanel === "ai" && <Sparkles className="w-4 h-4 text-emerald-600" />}
                 {activeSidePanel === "toc" && <List className="w-4 h-4 text-sky-600" />}
                 {activeSidePanel === "score" && <Sliders className="w-4 h-4 text-amber-600" />}
                 {activeSidePanel === "settings" && <Tag className="w-4 h-4 text-purple-600" />}
                 {activeSidePanel === "help" && <HelpCircle className="w-4 h-4 text-gray-600" />}
                 <span>
-                  {activeSidePanel === "ai" && "AIアシスタント"}
                   {activeSidePanel === "toc" && "目次・構成アウトライン"}
                   {activeSidePanel === "score" && "PR品質スコア"}
                   {activeSidePanel === "settings" && "配信・属性設定"}
@@ -630,28 +515,6 @@ export default function PRForm({ initialData = {}, isNew = false }: PRFormProps)
               </button>
             </div>
 
-            {/* AI Panel Content */}
-            {activeSidePanel === "ai" && (
-              <div className="space-y-3 text-xs">
-                <p className="text-gray-600 leading-relaxed">
-                  AIが魅力的なプレスリリース作成および「広報担当より」の補足コメント推敲をサポートします。
-                </p>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    setNewAnchor("土・日・祝日も一般外来に対応する");
-                    setNewComment("AIが自動生成した広報補足コメント: 働くご家庭にとって休日診療は最も切実なニーズです。");
-                  }}
-                  className="w-full justify-start text-xs font-semibold text-amber-800 border-amber-200 bg-amber-50 hover:bg-amber-100"
-                >
-                  <MessageSquarePlus className="w-3.5 h-3.5 mr-2 text-amber-600" />
-                  マーカー注釈のコメント案を生成
-                </Button>
-              </div>
-            )}
-
-            {/* TOC Panel Content */}
             {activeSidePanel === "toc" && (
               <div className="space-y-2 text-xs">
                 {tocHeadings.length > 0 ? (
@@ -664,48 +527,28 @@ export default function PRForm({ initialData = {}, isNew = false }: PRFormProps)
                     </div>
                   ))
                 ) : (
-                  <p className="text-gray-400 text-center py-6">
-                    見出しを設定すると表示されます
-                  </p>
+                  <p className="text-gray-400 text-center py-6">見出しを設定すると表示されます</p>
                 )}
               </div>
             )}
-
-            {/* Score Panel Content */}
-            {activeSidePanel === "score" && (
-              <PRQualityScore formData={currentFormData} />
-            )}
-
-            {/* Settings Panel Content */}
+            {activeSidePanel === "score" && <PRQualityScore formData={currentFormData} />}
             {activeSidePanel === "settings" && (
               <div className="space-y-4 text-xs">
                 <div>
                   <Label className="mb-1">カテゴリ</Label>
                   <Select value={category} onChange={(e) => setCategory(e.target.value)}>
                     {CATEGORIES.map((c) => (
-                      <option key={c.id} value={c.name}>
-                        {c.name}
-                      </option>
+                      <option key={c.id} value={c.name}>{c.name}</option>
                     ))}
                   </Select>
-                </div>
-                <div>
-                  <Label className="mb-1">予約配信日時</Label>
-                  <Input
-                    type="datetime-local"
-                    value={publishedAt}
-                    onChange={(e) => setPublishedAt(e.target.value)}
-                  />
                 </div>
               </div>
             )}
           </aside>
         )}
 
-        {/* Central Writing Canvas Area (Note Viewport) */}
         <main className="flex-1 overflow-y-auto py-8 px-4 sm:px-8 flex justify-center bg-[#f9fafb]">
           <div className="w-full max-w-3xl space-y-6">
-            {/* Soft PR Banner Alert in Yawaraka PR Mode */}
             {activeMode === "yawaraka_pr" && (
               <div className="bg-amber-50 border border-amber-200/90 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xs animate-in fade-in">
                 <div className="flex items-center gap-3">
@@ -714,298 +557,142 @@ export default function PRForm({ initialData = {}, isNew = false }: PRFormProps)
                   </div>
                   <div>
                     <span className="font-extrabold text-amber-950 text-sm flex items-center gap-2">
-                      やわらかPR モード（補足情報オーバーレイ）
+                      やわらかPR モード
                       <Badge variant="amber" className="text-[10px] px-2 font-bold">
-                        文章はプレスリリースと同じ
+                        ハイライト＆ポップアップカード対応
                       </Badge>
                     </span>
                     <p className="text-xs text-amber-800/80 mt-0.5">
-                      プレスリリース本文はそのままに、文中のマーカー注釈や広報担当者の補足コメントを重畳表示します。
+                      文章を選択してボタンを押すとマーカーを引けます。マーカークリックで表示する文章・画像を編集できます。
                     </p>
                   </div>
                 </div>
+
+                {selectedText && (
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={handleHighlightSelectedText}
+                    className="text-xs bg-amber-600 hover:bg-amber-700 text-white font-extrabold shadow-md animate-bounce"
+                  >
+                    <Highlighter className="w-4 h-4 mr-1" />
+                    「{selectedText.length > 10 ? selectedText.substring(0, 10) + "..." : selectedText}」にハイライトを引く
+                  </Button>
+                )}
               </div>
             )}
 
-            {/* Note Canvas Container Card */}
             <div className="bg-white rounded-2xl border border-gray-200/80 shadow-sm p-6 sm:p-10 space-y-6 min-h-[700px] relative">
-              {/* Note Header Cover Image Area */}
               <div className="relative group rounded-xl overflow-hidden bg-gray-50 border-2 border-dashed border-gray-200 hover:border-sky-300 transition-all">
                 {imageUrl ? (
                   <div className="relative">
-                    <img
-                      src={imageUrl}
-                      alt="Header visual"
-                      className="w-full h-56 sm:h-72 object-cover rounded-xl"
-                    />
-                    <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        size="sm"
-                        onClick={() => setShowImagePicker(true)}
-                        className="font-bold text-xs bg-white text-gray-900 shadow"
-                      >
-                        <ImageIcon className="w-4 h-4 mr-1 text-sky-600" />
-                        画像を変更
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => setImageUrl("")}
-                        className="font-bold text-xs"
-                      >
-                        削除
-                      </Button>
-                    </div>
+                    <img src={imageUrl} alt="Header visual" className="w-full h-56 sm:h-72 object-cover rounded-xl" />
                   </div>
                 ) : (
-                  <button
-                    type="button"
-                    onClick={() => setShowImagePicker(true)}
-                    className="w-full py-12 flex flex-col items-center justify-center text-gray-400 hover:text-sky-600 transition-colors cursor-pointer"
-                  >
-                    <div className="w-12 h-12 rounded-full bg-gray-100 group-hover:bg-sky-50 flex items-center justify-center mb-2 transition-colors">
-                      <Plus className="w-6 h-6 text-gray-400 group-hover:text-sky-600" />
-                    </div>
-                    <span className="text-xs font-bold text-gray-500 group-hover:text-sky-700">
-                      ヘッダー画像を追加
-                    </span>
+                  <button type="button" onClick={() => setShowImagePicker(true)} className="w-full py-12 flex flex-col items-center justify-center text-gray-400">
+                    <Plus className="w-6 h-6" />
                   </button>
                 )}
               </div>
 
-              {/* Preset Image Picker Drawer / Modal */}
-              {showImagePicker && (
-                <div className="p-4 bg-gray-50 border border-gray-200 rounded-xl space-y-3 animate-in fade-in">
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs font-bold text-gray-700">
-                      ヘッダー画像を選択 / URL指定
-                    </span>
+              <Textarea value={title} onChange={(e) => setTitle(e.target.value)} className="w-full text-2xl sm:text-3xl font-extrabold text-gray-900 border-none focus:ring-0 focus:outline-none bg-transparent resize-none p-0 leading-tight" />
+              <Input value={subtitle} onChange={(e) => setSubtitle(e.target.value)} className="w-full text-base font-medium text-gray-600 border-none focus:ring-0 focus:outline-none p-0 bg-transparent" />
+
+              <Separator className="bg-gray-100" />
+
+              {/* In Press Release Mode: Editable Textarea & Block Menu */}
+              {activeMode === "press_release" ? (
+                <div className="relative space-y-4">
+                  <div className="relative flex items-center gap-2 py-1">
                     <button
                       type="button"
-                      onClick={() => setShowImagePicker(false)}
-                      className="text-gray-400 hover:text-gray-700 text-xs"
+                      onClick={() => setBlockMenuOpen(!blockMenuOpen)}
+                      className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center bg-white cursor-pointer"
                     >
-                      ✕ 閉じる
+                      <Plus className={`w-4 h-4 transition-transform ${blockMenuOpen ? "rotate-45" : ""}`} />
                     </button>
+                    <span className="text-xs text-gray-400 font-sans">
+                      本文編集
+                    </span>
                   </div>
-                  <Input
-                    value={imageUrl}
-                    onChange={(e) => setImageUrl(e.target.value)}
-                    placeholder="https://images.unsplash.com/..."
-                    className="text-xs bg-white"
+
+                  <Textarea
+                    value={content}
+                    onChange={(e) => setContent(e.target.value)}
+                    rows={14}
+                    placeholder="ここにプレスリリースの本文を記述します..."
+                    className="w-full text-base text-gray-800 border border-gray-200 rounded-lg p-3 bg-white leading-relaxed focus:ring-1 focus:ring-sky-400"
                   />
-                  <div className="grid grid-cols-5 gap-2 pt-1">
-                    {SAMPLE_PRESET_IMAGES.map((preset, idx) => (
-                      <button
-                        key={idx}
-                        type="button"
-                        onClick={() => {
-                          setImageUrl(preset.url);
-                          setShowImagePicker(false);
-                        }}
-                        className="rounded-lg overflow-hidden border border-gray-200 hover:border-sky-500 transition-all cursor-pointer"
+                </div>
+              ) : (
+                /* In Yawaraka PR Mode: Clean Rendered Article (No Textarea) + Shadcn UI Toggle for Text Selection Highlighting */
+                <div className="space-y-4">
+                  {/* Shadcn UI Toggle Selection Bar */}
+                  <div className="flex flex-wrap items-center justify-between gap-3 border border-amber-200 bg-[#fefbf6] p-3.5 rounded-xl shadow-xs">
+                    <div className="flex items-center gap-2.5">
+                      <Toggle
+                        pressed={isHighlightMode}
+                        onPressedChange={setIsHighlightMode}
+                        variant="amber"
+                        size="default"
                       >
-                        <img
-                          src={preset.url}
-                          alt={preset.label}
-                          className="h-12 w-full object-cover"
-                        />
-                        <span className="block text-[9px] text-center bg-white truncate py-0.5 px-1">
-                          {preset.label}
-                        </span>
-                      </button>
-                    ))}
+                        <Highlighter className="w-4 h-4" />
+                        <span>ハイライト選択モード ({isHighlightMode ? "ON" : "OFF"})</span>
+                      </Toggle>
+
+                      <span className="text-xs text-amber-900 font-medium">
+                        文章をマウス選択し、Shadcn Toggleを押してハイライトを引けます
+                      </span>
+                    </div>
+
+                    {selectedText && (
+                      <Toggle
+                        pressed={true}
+                        onClick={handleHighlightSelectedText}
+                        variant="amber"
+                        size="sm"
+                        className="shadow-md border-amber-400 font-extrabold animate-bounce"
+                      >
+                        <Highlighter className="w-3.5 h-3.5" />
+                        <span>「{selectedText.length > 12 ? selectedText.substring(0, 12) + "..." : selectedText}」をハイライト</span>
+                      </Toggle>
+                    )}
+                  </div>
+
+                  {/* Clean Rendered Article View with Interactive Marker Popups */}
+                  <div className="mt-4 border-2 border-amber-200/90 rounded-2xl p-6 bg-white space-y-3 shadow-xs">
+                    <div className="flex items-center justify-between border-b border-amber-100 pb-2">
+                      <span className="text-xs font-extrabold text-amber-900 flex items-center gap-1.5">
+                        <Highlighter className="w-4 h-4 text-amber-600" />
+                        本文プレビュー（黄色のハイライトをクリックすると文章・画像を入力・編集できます）
+                      </span>
+                      <Badge variant="amber" className="text-[10px] font-bold">クリックでカード編集</Badge>
+                    </div>
+
+                    <div
+                      className="text-base text-gray-800 leading-relaxed whitespace-pre-line p-4 rounded-lg select-text"
+                      onMouseUp={handleDetectSelection}
+                      onKeyUp={handleDetectSelection}
+                    >
+                      <AnnotatedContent
+                        content={content}
+                        softNotes={softNotes}
+                        onSelectSoftNote={(note) => handleOpenEditNoteModal(note)}
+                      />
+                    </div>
                   </div>
                 </div>
               )}
 
-              {/* Title Field */}
-              <div className="space-y-2">
-                <Textarea
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="記事タイトル"
-                  rows={2}
-                  className="w-full text-2xl sm:text-3xl font-extrabold text-gray-900 border-none focus:ring-0 focus:outline-none placeholder:text-gray-300 resize-none p-0 bg-transparent leading-tight"
-                />
-              </div>
-
-              {/* Subtitle Field */}
-              <div>
-                <Input
-                  value={subtitle}
-                  onChange={(e) => setSubtitle(e.target.value)}
-                  placeholder="サブタイトル・リード文を入力（任意）"
-                  className="w-full text-base font-medium text-gray-600 border-none focus:ring-0 focus:outline-none placeholder:text-gray-300 p-0 bg-transparent"
-                />
-              </div>
-
-              <Separator className="bg-gray-100" />
-
-              {/* Main Content Body Editor */}
-              <div className="relative space-y-4">
-                {/* Floating Inline Block Menu Trigger Button (`+` Button) */}
-                <div className="relative flex items-center gap-2 py-1">
-                  <div className="relative">
-                    <button
-                      type="button"
-                      onClick={() => setBlockMenuOpen(!blockMenuOpen)}
-                      className="w-8 h-8 rounded-full border border-gray-300 text-gray-500 hover:text-gray-900 hover:border-gray-500 flex items-center justify-center transition-all bg-white shadow-xs cursor-pointer"
-                      title="ブロック挿入メニュー"
-                    >
-                      <Plus
-                        className={`w-4 h-4 transition-transform ${
-                          blockMenuOpen ? "rotate-45" : ""
-                        }`}
-                      />
-                    </button>
-
-                    {/* Note Block Insertion Menu */}
-                    {blockMenuOpen && (
-                      <div className="absolute left-0 top-full mt-2 w-56 bg-white border border-gray-200 rounded-xl shadow-2xl z-50 py-2 text-xs font-medium text-gray-700 animate-in fade-in slide-in-from-top-2">
-                        <div className="px-3 py-1 text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-                          挿入
-                        </div>
-
-                        <button
-                          type="button"
-                          onClick={() => insertSnippet("🪄 AIアシスタント提案テキスト")}
-                          className="w-full text-left px-3.5 py-2 hover:bg-emerald-50 text-emerald-800 flex items-center gap-2.5 cursor-pointer"
-                        >
-                          <Sparkles className="w-4 h-4 text-emerald-600" />
-                          <span>AIアシスタント</span>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() =>
-                            insertSnippet(
-                              "![挿入画像](https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800)"
-                            )
-                          }
-                          className="w-full text-left px-3.5 py-2 hover:bg-gray-100 flex items-center gap-2.5 cursor-pointer"
-                        >
-                          <ImageIcon className="w-4 h-4 text-sky-600" />
-                          <span>画像</span>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => insertSnippet("🎧 ［音声コンテンツプレイヤー］")}
-                          className="w-full text-left px-3.5 py-2 hover:bg-gray-100 flex items-center gap-2.5 cursor-pointer"
-                        >
-                          <Volume2 className="w-4 h-4 text-purple-600" />
-                          <span>音声</span>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() =>
-                            insertSnippet("🔗 https://prtimes.jp (埋め込みリンク)")
-                          }
-                          className="w-full text-left px-3.5 py-2 hover:bg-gray-100 flex items-center gap-2.5 cursor-pointer"
-                        >
-                          <Link2 className="w-4 h-4 text-blue-600" />
-                          <span>埋め込み</span>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => insertSnippet("\n## 大見出しタイトルの入力\n")}
-                          className="w-full text-left px-3.5 py-2 hover:bg-gray-100 flex items-center gap-2.5 cursor-pointer"
-                        >
-                          <span className="font-bold text-xs text-gray-600">h2</span>
-                          <span>大見出し</span>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => insertSnippet("\n### 小見出しタイトルの入力\n")}
-                          className="w-full text-left px-3.5 py-2 hover:bg-gray-100 flex items-center gap-2.5 cursor-pointer"
-                        >
-                          <span className="font-bold text-xs text-gray-500">h3</span>
-                          <span>小見出し</span>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => insertSnippet("\n- 箇条書き項目1\n- 箇条書き項目2\n")}
-                          className="w-full text-left px-3.5 py-2 hover:bg-gray-100 flex items-center gap-2.5 cursor-pointer"
-                        >
-                          <List className="w-4 h-4 text-gray-600" />
-                          <span>箇条書きリスト</span>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() =>
-                            insertSnippet("\n> 担当者コメント：「〜〜〜」\n")
-                          }
-                          className="w-full text-left px-3.5 py-2 hover:bg-gray-100 flex items-center gap-2.5 cursor-pointer"
-                        >
-                          <Quote className="w-4 h-4 text-gray-600" />
-                          <span>引用</span>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => insertSnippet("\n---\n")}
-                          className="w-full text-left px-3.5 py-2 hover:bg-gray-100 flex items-center gap-2.5 cursor-pointer"
-                        >
-                          <Minus className="w-4 h-4 text-gray-600" />
-                          <span>区切り線</span>
-                        </button>
-                      </div>
-                    )}
-                  </div>
-
-                  <span className="text-xs text-gray-400 font-sans">
-                    プレスリリース本文（※やわらかPRモードでも共通の文章です）
-                  </span>
-                </div>
-
-                {/* Textarea for Editing Article Content */}
-                <Textarea
-                  value={content}
-                  onChange={(e) => setContent(e.target.value)}
-                  rows={14}
-                  placeholder="ここにプレスリリースの本文を記述します..."
-                  className="w-full text-base text-gray-800 border border-gray-100 rounded-lg p-3 bg-white leading-relaxed focus:ring-1 focus:ring-sky-400"
-                />
-
-                {/* In Yawaraka PR Mode: Live Annotated Content Preview with Yellow Text Markers & Tooltip Cards */}
-                {activeMode === "yawaraka_pr" && (
-                  <div className="mt-6 border-2 border-amber-300/80 rounded-xl p-5 bg-[#fffdf9] space-y-3">
-                    <div className="flex items-center justify-between border-b border-amber-200 pb-2">
-                      <span className="text-xs font-extrabold text-amber-900 flex items-center gap-1.5">
-                        <Highlighter className="w-4 h-4 text-amber-600" />
-                        やわらかPR ライブアノテーション表示確認（マーカーにカーソルを合わせるとポップアップが表示されます）
-                      </span>
-                      <Badge variant="amber" className="text-[10px]">
-                        実際の配信ページと同様の表示
-                      </Badge>
-                    </div>
-
-                    <div className="text-sm text-gray-800 leading-relaxed whitespace-pre-line p-3 bg-white rounded-lg border border-amber-100 shadow-inner">
-                      <AnnotatedContent content={content} softNotes={softNotes} />
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Yawaraka PR Supplementary Overlay Controls Section */}
               {activeMode === "yawaraka_pr" && (
                 <div className="mt-8 border border-amber-200 bg-amber-50/60 rounded-2xl p-6 space-y-6 animate-in fade-in">
                   <div className="flex items-center justify-between border-b border-amber-200 pb-3">
                     <span className="font-extrabold text-base text-amber-950 flex items-center gap-2">
                       <Heart className="w-5 h-5 text-amber-600 fill-current" />
-                      「広報担当より」の補足情報・マーカー注釈設定
+                      「広報担当より」の補足マーカー一覧（全 {softNotes.length}件）
                     </span>
                     <Badge variant="amber" className="text-xs font-bold px-2 py-0.5">
-                      PR本文に重ねて掲載
+                      クリックして編集
                     </Badge>
                   </div>
 
@@ -1031,80 +718,59 @@ export default function PRForm({ initialData = {}, isNew = false }: PRFormProps)
                     </div>
                   </div>
 
-                  {/* Add New Soft PR Note Marker */}
-                  <div className="bg-white rounded-xl p-4 border border-amber-200 space-y-3">
-                    <span className="text-xs font-extrabold text-amber-900 flex items-center gap-1.5">
-                      <MessageSquarePlus className="w-4 h-4 text-amber-600" />
-                      新しい「広報担当より」マーカー注釈の追加
-                    </span>
-
-                    <div className="space-y-2 text-xs">
-                      <div>
-                        <Label className="text-gray-700 mb-1">
-                          対象テキスト（本文中のハイライトしたいキーワード・フレーズ）
-                        </Label>
-                        <Input
-                          value={newAnchor}
-                          onChange={(e) => setNewAnchor(e.target.value)}
-                          placeholder="例: 土・日・祝日も一般外来に対応する"
-                          className="bg-amber-50/40 border-amber-200 font-medium"
-                        />
-                      </div>
-
-                      <div>
-                        <Label className="text-gray-700 mb-1">
-                          広報担当者の補足コメント（マーカーホバー時にカード表示されるメッセージ）
-                        </Label>
-                        <Textarea
-                          value={newComment}
-                          onChange={(e) => setNewComment(e.target.value)}
-                          rows={2}
-                          placeholder="例: この一文は何度も書き直しました。特別なこのように書くべきか迷いましたが..."
-                          className="bg-amber-50/40 border-amber-200 text-xs"
-                        />
-                      </div>
-
+                  {/* Active Soft PR Notes Cards List */}
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-extrabold text-amber-900">
+                        登録済みの「広報担当より」ポップアップカード:
+                      </span>
                       <Button
                         type="button"
-                        onClick={handleAddSoftNote}
-                        className="text-xs font-bold bg-amber-600 hover:bg-amber-700 text-white w-full py-2"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          const newNote = { anchor: "共働き世帯の“もしも”を支える", comment: "", imageUrl: "" };
+                          handleOpenEditNoteModal(newNote, softNotes.length);
+                        }}
+                        className="text-xs text-amber-900 border-amber-300 bg-white font-bold hover:bg-amber-100"
                       >
-                        <Plus className="w-4 h-4 mr-1" />
-                        マーカー注釈を追加
+                        <Plus className="w-3.5 h-3.5 mr-1 text-amber-600" />
+                        新規マーカーを手動追加
                       </Button>
                     </div>
-                  </div>
 
-                  {/* Active Soft PR Notes List */}
-                  <div className="space-y-2">
-                    <span className="text-xs font-extrabold text-amber-900">
-                      現在登録されている「広報担当より」注釈リスト ({softNotes.length}件):
-                    </span>
+                    <div className="grid grid-cols-1 gap-2.5">
+                      {softNotes.map((note, idx) => (
+                        <div
+                          key={idx}
+                          onClick={() => handleOpenEditNoteModal(note, idx)}
+                          className="bg-white border border-amber-200 hover:border-amber-400 rounded-xl p-3.5 space-y-2 text-xs shadow-2xs cursor-pointer transition-all hover:shadow-xs group"
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="font-bold text-amber-900 bg-amber-100/90 px-2 py-0.5 rounded border border-amber-300">
+                              対象: 「{note.anchor}」
+                            </span>
+                            <span className="text-[11px] text-amber-700 font-bold group-hover:underline flex items-center gap-1">
+                              <Edit3 className="w-3.5 h-3.5" />
+                              編集する
+                            </span>
+                          </div>
 
-                    {softNotes.map((note, idx) => (
-                      <div
-                        key={idx}
-                        className="bg-white border border-amber-200 rounded-xl p-3.5 space-y-1.5 text-xs shadow-2xs"
-                      >
-                        <div className="flex items-center justify-between">
-                          <span className="font-bold text-amber-900 bg-amber-100/80 px-2 py-0.5 rounded border border-amber-200">
-                            対象: 「{note.anchor}」
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveSoftNote(idx)}
-                            className="text-gray-400 hover:text-red-600 p-1"
-                            title="削除"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                          {note.imageUrl && (
+                            <img
+                              src={note.imageUrl}
+                              alt="補足画像"
+                              className="h-20 w-full object-cover rounded border border-amber-100"
+                            />
+                          )}
+
+                          <p className="text-gray-700 text-xs leading-relaxed bg-amber-50/40 p-2 rounded border border-amber-100">
+                            <span className="font-bold text-amber-800 mr-1">広報担当より:</span>
+                            {note.comment || "（クリックして表示文章を入力してください）"}
+                          </p>
                         </div>
-                        <p className="text-gray-700 text-xs leading-relaxed bg-amber-50/30 p-2 rounded">
-                          <span className="font-bold text-amber-800 mr-1">広報担当より:</span>
-                          {note.comment}
-                        </p>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
 
                   {/* Reflection Text Box */}
@@ -1126,6 +792,119 @@ export default function PRForm({ initialData = {}, isNew = false }: PRFormProps)
         </main>
       </div>
 
+      {/* Popover Card Editing Dialog (Article & Image Inputs) */}
+      {editingNote && (
+        <Dialog open={!!editingNote} onOpenChange={(open) => !open && setEditingNote(null)}>
+          <DialogHeader>
+            <div className="flex items-center justify-between border-b pb-3">
+              <DialogTitle className="flex items-center gap-2 text-base text-amber-900 font-extrabold">
+                <Heart className="w-4 h-4 text-amber-600 fill-current" />
+                「広報担当より」ポップアップカードの入力・編集
+              </DialogTitle>
+              <Badge variant="amber" className="text-xs font-bold">
+                文章・画像の設定
+              </Badge>
+            </div>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2 text-xs">
+            {/* Target Anchor Text */}
+            <div className="bg-amber-50 p-3 rounded-xl border border-amber-200 space-y-1">
+              <Label className="text-amber-900 font-bold block text-[11px]">
+                ハイライト対象テキスト（本文中のマーカー箇所）
+              </Label>
+              <Input
+                value={editingNote.anchor}
+                onChange={(e) => setEditingNote({ ...editingNote, anchor: e.target.value })}
+                className="font-extrabold text-amber-950 text-xs bg-white border-amber-300"
+              />
+            </div>
+
+            {/* Popover Comment Text (文章) */}
+            <div>
+              <Label className="text-gray-800 font-bold mb-1 block">
+                ポップアップカードに表示させる文章（広報担当者の補足コメント）
+              </Label>
+              <Textarea
+                value={editComment}
+                onChange={(e) => setEditComment(e.target.value)}
+                rows={3}
+                placeholder="例: この一文は何度も書き直しました。特別なこのように書くべきか迷いましたが、働くご家庭にとっては一番知りたい情報だと思い、最初に置いています。"
+                className="text-xs leading-relaxed border-gray-300 focus:ring-amber-500 font-sans"
+              />
+            </div>
+
+            {/* Popover Image (画像) */}
+            <div className="space-y-2">
+              <Label className="text-gray-800 font-bold mb-1 block">
+                ポップアップカードに表示させる画像（任意）
+              </Label>
+              <Input
+                value={editImageUrl}
+                onChange={(e) => setEditImageUrl(e.target.value)}
+                placeholder="画像URLを入力（https://images.unsplash.com/...）"
+                className="text-xs border-gray-300"
+              />
+
+              <div className="space-y-1">
+                <span className="text-[11px] font-semibold text-gray-500">サンプル画像から選択:</span>
+                <div className="grid grid-cols-5 gap-1.5">
+                  {SAMPLE_PRESET_IMAGES.map((preset, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => setEditImageUrl(preset.url)}
+                      className={`rounded border overflow-hidden transition-all cursor-pointer ${
+                        editImageUrl === preset.url ? "border-amber-600 ring-2 ring-amber-300" : "border-gray-200 hover:border-amber-400"
+                      }`}
+                    >
+                      <img src={preset.url} alt={preset.label} className="h-10 w-full object-cover" />
+                      <span className="block text-[8px] text-center truncate bg-white py-0.5">{preset.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Live Popover Card Preview */}
+            <div className="border border-amber-200 bg-[#fbf6ee] rounded-xl p-4 space-y-2 shadow-inner">
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-800 block">
+                ポップアップカードのライブプレビュー
+              </span>
+              <div className="bg-[#fbf6ee] border border-[#e2d2b6] p-4 rounded-md shadow-md space-y-2 relative">
+                <span className="text-[11px] font-bold text-[#a8703a] block">
+                  広報担当より
+                </span>
+                {editImageUrl && (
+                  <img src={editImageUrl} alt="補足画像" className="h-28 w-full object-cover rounded-sm border border-[#e2d2b6]" />
+                )}
+                <p className="text-xs text-[#443b2e] leading-relaxed whitespace-pre-wrap">
+                  {editComment || "（文章を入力してください）"}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between pt-3 border-t">
+            {editingNoteIndex !== null ? (
+              <Button type="button" variant="destructive" size="sm" onClick={handleDeleteEditedNote}>
+                <Trash2 className="w-3.5 h-3.5 mr-1" />
+                削除
+              </Button>
+            ) : <div />}
+
+            <div className="flex items-center gap-2">
+              <Button type="button" variant="outline" size="sm" onClick={() => setEditingNote(null)}>
+                キャンセル
+              </Button>
+              <Button type="button" size="sm" className="bg-amber-600 hover:bg-amber-700 text-white font-bold" onClick={handleSaveEditedNote}>
+                保存する
+              </Button>
+            </div>
+          </div>
+        </Dialog>
+      )}
+
       {/* Preview Confirmation Modal */}
       <PRPreviewModal
         open={modalOpen}
@@ -1135,5 +914,6 @@ export default function PRForm({ initialData = {}, isNew = false }: PRFormProps)
     </div>
   );
 }
+
 
 
