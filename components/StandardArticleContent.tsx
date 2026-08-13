@@ -7,9 +7,12 @@ import { Mail, Phone, Globe, Download } from "lucide-react";
 
 interface StandardArticleContentProps {
   release: PressRelease;
+  showSoftPr?: boolean;
 }
 
-export function StandardArticleContent({ release }: StandardArticleContentProps) {
+export function StandardArticleContent({ release, showSoftPr = false }: StandardArticleContentProps) {
+  const softPr = showSoftPr ? release.softPr : undefined;
+
   return (
     <>
       {/* Main Title */}
@@ -20,6 +23,18 @@ export function StandardArticleContent({ release }: StandardArticleContentProps)
       {/* Subtitle / Lead */}
       {release.subtitle && (
         <p className="text-sm text-[#666] leading-relaxed mb-6">{release.subtitle}</p>
+      )}
+
+      {softPr && (
+        <div className="mb-6 flex items-center gap-3 border border-[#ebdfcb] bg-[#fbf6ee] px-4 py-3">
+          <div className="h-8 w-8 shrink-0 rounded-full border border-[#e0d5c0] bg-[repeating-linear-gradient(135deg,#efe7d9_0_6px,#e6dcc9_6px_12px)]" />
+          <p className="text-xs leading-relaxed text-[#574d40]">
+            <span className="font-bold">広報担当 {softPr.author.name}（{softPr.author.role}）</span>
+            が本文にコメントを添えています。文中の
+            <span className="bg-[linear-gradient(transparent_62%,#f7e3b4_62%)]">マーカー部分</span>
+            にカーソルを合わせるとご覧いただけます。
+          </p>
+        </div>
       )}
 
       {/* PV & Keywords */}
@@ -62,8 +77,35 @@ export function StandardArticleContent({ release }: StandardArticleContentProps)
 
       {/* Main Text Content Body */}
       <div className="max-w-none text-[#1a1a1a] leading-[1.9] space-y-6 mb-8 whitespace-pre-line text-sm md:text-base">
-        <AnnotatedContent content={release.content} notes={release.inlineNotes} />
+        <AnnotatedContent
+          content={release.content}
+          notes={release.inlineNotes}
+          softNotes={softPr?.notes}
+        />
       </div>
+
+      {/* Soft PR Reflection */}
+      {softPr && (
+        <div className="mb-10 border border-[#ebdfcb] bg-[#fbf6ee] px-6 py-8 md:px-10">
+          <div className="mb-5 text-[13px] font-bold tracking-wide text-[#a8703a]">
+            広報担当より　このリリースについて
+          </div>
+          <div className="flex flex-col gap-4">
+            {softPr.reflection.map((paragraph, index) => (
+              <p key={index} className="text-sm leading-[1.9] text-[#362f26]">
+                {paragraph}
+              </p>
+            ))}
+          </div>
+          <div className="mt-6 flex items-center gap-3 border-t border-[#e8ddc9] pt-4">
+            <div className="h-10 w-10 shrink-0 rounded-full border border-[#e0d5c0] bg-[repeating-linear-gradient(135deg,#efe7d9_0_6px,#e6dcc9_6px_12px)]" />
+            <div className="text-sm leading-relaxed">
+              <div className="font-bold text-[#1a1a1a]">{softPr.author.name}</div>
+              <div className="text-xs text-[#7a6f5e]">{softPr.author.role}</div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Secondary Images Gallery */}
       {release.secondaryImages && release.secondaryImages.length > 0 && (
