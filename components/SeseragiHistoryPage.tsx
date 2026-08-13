@@ -98,6 +98,7 @@ export default function SeseragiHistoryPage() {
       return {
         zIndex: SESERAGI_HISTORY.length,
         transform: "scale(1) translateY(0px)",
+        transformOrigin: "bottom",
         opacity: 1,
         transition: "transform 0.3s ease, opacity 0.3s ease",
       };
@@ -106,7 +107,8 @@ export default function SeseragiHistoryPage() {
     if (diff === 1) {
       return {
         zIndex: SESERAGI_HISTORY.length - 1,
-        transform: "scale(0.96) translateY(12px)",
+        transform: "scale(0.95) translateY(18px)",
+        transformOrigin: "bottom",
         opacity: 0.9,
         transition: "transform 0.3s ease, opacity 0.3s ease",
       };
@@ -115,7 +117,8 @@ export default function SeseragiHistoryPage() {
     if (diff === 2) {
       return {
         zIndex: SESERAGI_HISTORY.length - 2,
-        transform: "scale(0.92) translateY(24px)",
+        transform: "scale(0.90) translateY(36px)",
+        transformOrigin: "bottom",
         opacity: 0.75,
         transition: "transform 0.3s ease, opacity 0.3s ease",
       };
@@ -123,7 +126,8 @@ export default function SeseragiHistoryPage() {
 
     return {
       zIndex: 0,
-      transform: "scale(0.88) translateY(36px)",
+      transform: "scale(0.85) translateY(54px)",
+      transformOrigin: "bottom",
       opacity: 0,
       pointerEvents: "none" as const,
     };
