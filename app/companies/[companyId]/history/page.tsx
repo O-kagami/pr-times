@@ -1,22 +1,52 @@
 import React from "react";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Images } from "lucide-react";
+import SeseragiHistoryPage from "@/components/SeseragiHistoryPage";
 import { getAdminCompanyHeader } from "@/lib/adminCompany";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ companyId: string }>;
+}): Promise<Metadata> {
+  const { companyId } = await params;
+
+  if (companyId === "seseragi") {
+    return {
+      title: "医療法人せせらぎのHISTORY | PR TIMES",
+      description:
+        "医療法人せせらぎが届けてきた小児医療・子育て支援の発信を振り返る静的アーカイブです。",
+    };
+  }
+
+  const header = await getAdminCompanyHeader(companyId);
+
+  return {
+    title: header ? `${header.name}のHISTORY | PR TIMES` : "HISTORY | PR TIMES",
+  };
+}
+
 /**
- * PRを振り返るヒストリー（スライドショー）の置き場所。
- * 中身は未実装で、いまはダッシュボードからの導線が切れないようにするためのページ。
+ * PRを振り返るヒストリー。
+ * せせらぎは静的アーカイブ（SeseragiHistoryPage）が実装済み。
+ * 他の企業は中身がまだ無いので、ダッシュボードからの導線が切れないよう準備中を出す。
  */
-export default async function CompanyHistoryPage({
+export default async function CompanyHistoryRoute({
   params,
 }: {
   params: Promise<{ companyId: string }>;
 }) {
   const { companyId } = await params;
+
+  if (companyId === "seseragi") {
+    return <SeseragiHistoryPage />;
+  }
+
   const header = await getAdminCompanyHeader(companyId);
 
   if (!header) {

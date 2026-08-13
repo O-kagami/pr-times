@@ -1,12 +1,13 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { PressReleaseCard } from "@/components/PressReleaseCard";
 import { PressReleaseModal } from "@/components/PressReleaseModal";
 import { PRESS_RELEASES, PressRelease } from "@/data/pressReleases";
-import { Building2 } from "lucide-react";
+import { ArrowRight, Building2, History } from "lucide-react";
+import Link from "next/link";
 
 /**
  * data/pressReleases.ts の静的データを正とするデモ用の企業ページ。
@@ -14,36 +15,10 @@ import { Building2 } from "lucide-react";
  */
 export default function CompanyDemoPage({ companyId }: { companyId: string }) {
   const [searchQuery, setSearchQuery] = useState("");
-  const [pressReleases, setPressReleases] = useState<PressRelease[]>(PRESS_RELEASES);
   const [selectedRelease, setSelectedRelease] = useState<PressRelease | null>(null);
 
-  useEffect(() => {
-    let isActive = true;
-
-    const fetchPressReleases = async () => {
-      try {
-        const response = await fetch("/api/press-releases", { cache: "no-store" });
-        if (!response.ok) {
-          return;
-        }
-
-        const json = (await response.json()) as { data?: PressRelease[] };
-        if (isActive && Array.isArray(json.data) && json.data.length > 0) {
-          setPressReleases(json.data);
-        }
-      } catch (error) {
-        console.error("Failed to load press releases", error);
-      }
-    };
-
-    fetchPressReleases();
-    return () => {
-      isActive = false;
-    };
-  }, []);
-
   const companyReleases = useMemo(() => {
-    return pressReleases
+    return PRESS_RELEASES
       .filter((release) => release.companyId === companyId)
       .filter((release) => {
         if (searchQuery.trim() === "") {
@@ -56,7 +31,7 @@ export default function CompanyDemoPage({ companyId }: { companyId: string }) {
           release.keywords.some((k) => k.toLowerCase().includes(q))
         );
       });
-  }, [pressReleases, companyId, searchQuery]);
+  }, [companyId, searchQuery]);
 
   const profile = companyReleases[0]?.companyProfile;
   const companyName = profile?.name || companyReleases[0]?.company || companyId;
@@ -70,12 +45,22 @@ export default function CompanyDemoPage({ companyId }: { companyId: string }) {
           <div className="flex justify-center items-center bg-sky-50 border border-sky-100 rounded w-14 h-14 shrink-0">
             <Building2 className="w-7 h-7 text-[#0066cc]" />
           </div>
-          <div>
+          <div className="flex-1">
             <h1 className="font-extrabold text-[#182b45] text-lg">{companyName}</h1>
             <p className="mt-0.5 text-gray-500 text-xs">
               プレスリリース {companyReleases.length}件
             </p>
           </div>
+          {companyId === "seseragi" && (
+            <Link
+              className="inline-flex shrink-0 items-center gap-2 rounded bg-[#0d5960] px-4 py-3 text-xs font-bold text-white shadow-sm transition-colors hover:bg-[#087c84]"
+              href="/companies/seseragi/history"
+            >
+              <History aria-hidden="true" className="h-4 w-4" />
+              この会社のHISTORYを見る
+              <ArrowRight aria-hidden="true" className="h-4 w-4" />
+            </Link>
+          )}
         </div>
 
         <div className="items-start gap-8 grid grid-cols-1 lg:grid-cols-12">
