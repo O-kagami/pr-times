@@ -13,7 +13,6 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Toggle } from "@/components/ui/toggle";
 import { CATEGORIES, PressRelease, SoftPrNote, TRENDING_KEYWORDS } from "@/data/pressReleases";
 
 import PRQualityScore from "@/components/admin/PRQualityScore";
@@ -185,7 +184,11 @@ export default function PRForm({
   );
 
   const [selectedText, setSelectedText] = useState("");
-  const [isHighlightMode, setIsHighlightMode] = useState(true);
+  const [selectionAnchor, setSelectionAnchor] = useState<{ top: number; left: number } | null>(
+    null
+  );
+  const articleRef = useRef<HTMLDivElement>(null);
+  const [clearSoftPrConfirmOpen, setClearSoftPrConfirmOpen] = useState(false);
   const [editingNote, setEditingNote] = useState<SoftPrNote | null>(null);
 
   const [editingNoteIndex, setEditingNoteIndex] = useState<number | null>(null);
@@ -249,22 +252,31 @@ export default function PRForm({
     setBlockMenuOpen(false);
   };
 
-  const handleDetectSelection = (e: React.SyntheticEvent) => {
+  /**
+   * 選択された文章と、その位置（本文プレビュー枠の左上からの相対座標）を覚える。
+   * 座標は「コメントを追加」の吹き出しを選択箇所の真上に出すために使う。
+   */
+  const handleDetectSelection = () => {
     if (activeMode !== "yawaraka_pr") return;
-    const target = e.currentTarget as HTMLTextAreaElement;
-    if (target.selectionStart !== undefined && target.selectionEnd !== undefined) {
-      const start = target.selectionStart;
-      const end = target.selectionEnd;
-      if (end - start > 1) {
-        const text = target.value.substring(start, end).trim();
-        if (text) setSelectedText(text);
-        return;
-      }
+
+    const selection = window.getSelection();
+    const text = selection?.toString().trim() ?? "";
+    const container = articleRef.current;
+
+    if (!selection || selection.rangeCount === 0 || text.length < 2 || !container) {
+      setSelectedText("");
+      setSelectionAnchor(null);
+      return;
     }
-    const sel = window.getSelection();
-    if (sel && sel.toString().trim().length > 1) {
-      setSelectedText(sel.toString().trim());
-    }
+
+    const rect = selection.getRangeAt(0).getBoundingClientRect();
+    const box = container.getBoundingClientRect();
+
+    setSelectedText(text);
+    setSelectionAnchor({
+      top: rect.top - box.top,
+      left: rect.left - box.left + rect.width / 2,
+    });
   };
 
   const handleHighlightSelectedText = () => {
@@ -276,6 +288,7 @@ export default function PRForm({
     };
     setSoftNotes((prev) => [...prev, newNote]);
     setSelectedText("");
+    setSelectionAnchor(null);
     handleOpenEditNoteModal(newNote, softNotes.length);
   };
 
@@ -315,6 +328,23 @@ export default function PRForm({
     }
     setEditingNote(null);
     setEditingNoteIndex(null);
+  };
+
+  /**
+   * やわらかPRの編集を白紙に戻す。実演で1から作って見せられるよう、
+   * 元の内容に戻すのではなく空にする（プレスリリース本文には触らない）。
+   */
+  const handleClearSoftPr = () => {
+    setSoftNotes([]);
+    setSoftPrAuthorName("");
+    setSoftPrAuthorRole("");
+    setSoftPrReflection("");
+    setEditingNote(null);
+    setEditingNoteIndex(null);
+    setSelectedText("");
+    setClearSoftPrConfirmOpen(false);
+    setSavedToast("やわらかPRの編集をすべて消しました");
+    setTimeout(() => setSavedToast(null), 2500);
   };
 
   const handleRemoveKeyword = (tagToRemove: string) => {
@@ -477,6 +507,19 @@ export default function PRForm({
               <MoreHorizontal className="w-5 h-5" />
             </button>
           </div>
+          {/* 編集時だけ。新規作成では消す対象がまだないので出さない */}
+          {!isNew && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setClearSoftPrConfirmOpen(true)}
+              className="px-3 py-1.5 border-red-200 rounded-lg font-semibold text-red-600 text-xs hover:text-red-700 hover:bg-red-50"
+            >
+              <Trash2 className="mr-1 w-3.5 h-3.5" />
+              やわらかPRを全消去
+            </Button>
+          )}
           <Button
             type="button"
             variant="outline"
@@ -621,29 +664,14 @@ export default function PRForm({
                     <Heart className="w-5 h-5 fill-current" />
                   </div>
                   <div>
-                    <span className="font-extrabold text-amber-950 text-sm flex items-center gap-2">
+                    <span className="font-extrabold text-amber-950 text-sm">
                       やわらかPR モード
-                      <Badge variant="amber" className="text-[10px] px-2 font-bold">
-                        ハイライト＆ポップアップカード対応
-                      </Badge>
                     </span>
                     <p className="text-xs text-amber-800/80 mt-0.5">
-                      文章を選択してボタンを押すとマーカーを引けます。マーカークリックで表示する文章・画像を編集できます。
+                      本文を選択すると、その場でコメントを追加できます。
                     </p>
                   </div>
                 </div>
-
-                {selectedText && (
-                  <Button
-                    type="button"
-                    size="sm"
-                    onClick={handleHighlightSelectedText}
-                    className="text-xs bg-amber-600 hover:bg-amber-700 text-white font-extrabold shadow-md animate-bounce"
-                  >
-                    <Highlighter className="w-4 h-4 mr-1" />
-                    「{selectedText.length > 10 ? selectedText.substring(0, 10) + "..." : selectedText}」にハイライトを引く
-                  </Button>
-                )}
               </div>
             )}
 
@@ -690,52 +718,45 @@ export default function PRForm({
                   />
                 </div>
               ) : (
-                /* In Yawaraka PR Mode: Clean Rendered Article (No Textarea) + Shadcn UI Toggle for Text Selection Highlighting */
+                /* In Yawaraka PR Mode: 本文は選択してコメントを足すだけ。書き換えはプレスリリース側で */
                 <div className="space-y-4">
-                  {/* Shadcn UI Toggle Selection Bar */}
-                  <div className="flex flex-wrap items-center justify-between gap-3 border border-amber-200 bg-[#fefbf6] p-3.5 rounded-xl shadow-xs">
-                    <div className="flex items-center gap-2.5">
-                      <Toggle
-                        pressed={isHighlightMode}
-                        onPressedChange={setIsHighlightMode}
-                        variant="amber"
-                        size="default"
-                      >
-                        <Highlighter className="w-4 h-4" />
-                        <span>ハイライト選択モード ({isHighlightMode ? "ON" : "OFF"})</span>
-                      </Toggle>
-
-                      <span className="text-xs text-amber-900 font-medium">
-                        文章をマウス選択し、Shadcn Toggleを押してハイライトを引けます
-                      </span>
-                    </div>
-
-                    {selectedText && (
-                      <Toggle
-                        pressed={true}
-                        onClick={handleHighlightSelectedText}
-                        variant="amber"
-                        size="sm"
-                        className="shadow-md border-amber-400 font-extrabold animate-bounce"
-                      >
-                        <Highlighter className="w-3.5 h-3.5" />
-                        <span>「{selectedText.length > 12 ? selectedText.substring(0, 12) + "..." : selectedText}」をハイライト</span>
-                      </Toggle>
-                    )}
+                  {/* 記事末尾のメッセージ。最初に書いてもらいたいので本文より上に置く */}
+                  <div className="border border-amber-200 bg-[#fefbf6] rounded-xl p-4 space-y-2 shadow-xs">
+                    <Label className="text-amber-950 text-xs font-extrabold">
+                      このリリースについて
+                    </Label>
+                    <p className="text-[11px] text-amber-800/80">
+                      記事の最後に、広報担当からのメッセージとして載ります。
+                    </p>
+                    <Textarea
+                      value={softPrReflection}
+                      onChange={(e) => setSoftPrReflection(e.target.value)}
+                      rows={4}
+                      placeholder="このリリースを出すまでに考えたこと、迷ったことを書いてみてください。"
+                      className="bg-white border-amber-200 text-xs text-gray-900 leading-relaxed"
+                    />
                   </div>
 
-                  {/* Clean Rendered Article View with Interactive Marker Popups */}
-                  <div className="mt-4 border-2 border-amber-200/90 rounded-2xl p-6 bg-white space-y-3 shadow-xs">
+                  {/* 選択中の文字色。青いままだとやわらかPRの温度感と合わないので暖色にする */}
+                  <style>{`
+                    .yawaraka-article ::selection { background-color: #fcd9a8; color: #4a332b; }
+                    .yawaraka-article::selection { background-color: #fcd9a8; color: #4a332b; }
+                  `}</style>
+
+                  <div
+                    ref={articleRef}
+                    className="relative mt-4 border-2 border-amber-200/90 rounded-2xl p-6 bg-white space-y-3 shadow-xs"
+                  >
                     <div className="flex items-center justify-between border-b border-amber-100 pb-2">
                       <span className="text-xs font-extrabold text-amber-900 flex items-center gap-1.5">
                         <Highlighter className="w-4 h-4 text-amber-600" />
-                        本文プレビュー（黄色のハイライトをクリックすると文章・画像を入力・編集できます）
+                        本文プレビュー
                       </span>
                       <Badge variant="amber" className="text-[10px] font-bold">クリックでカード編集</Badge>
                     </div>
 
                     <div
-                      className="text-base text-gray-800 leading-relaxed whitespace-pre-line p-4 rounded-lg select-text"
+                      className="yawaraka-article text-base text-gray-800 leading-relaxed whitespace-pre-line p-4 rounded-lg select-text"
                       onMouseUp={handleDetectSelection}
                       onKeyUp={handleDetectSelection}
                     >
@@ -745,6 +766,25 @@ export default function PRForm({
                         onSelectSoftNote={(note) => handleOpenEditNoteModal(note)}
                       />
                     </div>
+
+                    {selectedText && selectionAnchor && (
+                      <div
+                        className="absolute z-30 -translate-x-1/2 -translate-y-full pb-2 animate-in fade-in zoom-in-95"
+                        style={{ top: selectionAnchor.top, left: selectionAnchor.left }}
+                      >
+                        <button
+                          type="button"
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={handleHighlightSelectedText}
+                          className="flex items-center gap-1.5 bg-amber-600 hover:bg-amber-700 shadow-lg px-3 py-1.5 rounded-full font-bold text-white text-xs whitespace-nowrap transition-colors cursor-pointer"
+                        >
+                          <MessageSquarePlus className="w-3.5 h-3.5" />
+                          コメントを追加
+                        </button>
+                        {/* 吹き出しのしっぽ */}
+                        <span className="bottom-[3px] left-1/2 absolute bg-amber-600 w-2.5 h-2.5 rotate-45 -translate-x-1/2" />
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -754,7 +794,7 @@ export default function PRForm({
                   <div className="flex items-center justify-between border-b border-amber-200 pb-3">
                     <span className="font-extrabold text-base text-amber-950 flex items-center gap-2">
                       <Heart className="w-5 h-5 text-amber-600 fill-current" />
-                      「広報担当より」の補足マーカー一覧（全 {softNotes.length}件）
+                      「広報担当より」のコメント（{softNotes.length}件）
                     </span>
                     <Badge variant="amber" className="text-xs font-bold px-2 py-0.5">
                       クリックして編集
@@ -785,10 +825,7 @@ export default function PRForm({
 
                   {/* Active Soft PR Notes Cards List */}
                   <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-extrabold text-amber-900">
-                        登録済みの「広報担当より」ポップアップカード:
-                      </span>
+                    <div className="flex items-center justify-end">
                       <Button
                         type="button"
                         size="sm"
@@ -800,7 +837,7 @@ export default function PRForm({
                         className="text-xs text-amber-900 border-amber-300 bg-white font-bold hover:bg-amber-100"
                       >
                         <Plus className="w-3.5 h-3.5 mr-1 text-amber-600" />
-                        新規マーカーを手動追加
+                        手動で追加
                       </Button>
                     </div>
 
@@ -831,25 +868,13 @@ export default function PRForm({
 
                           <p className="text-gray-700 text-xs leading-relaxed bg-amber-50/40 p-2 rounded border border-amber-100">
                             <span className="font-bold text-amber-800 mr-1">広報担当より:</span>
-                            {note.comment || "（クリックして表示文章を入力してください）"}
+                            {note.comment || "（クリックして文章を入力）"}
                           </p>
                         </div>
                       ))}
                     </div>
                   </div>
 
-                  {/* Reflection Text Box */}
-                  <div>
-                    <Label className="text-amber-950 mb-1 text-xs font-extrabold">
-                      広報担当より　このリリースについて（記事末尾のメッセージ枠）
-                    </Label>
-                    <Textarea
-                      value={softPrReflection}
-                      onChange={(e) => setSoftPrReflection(e.target.value)}
-                      rows={4}
-                      className="bg-white border-amber-200 text-xs text-gray-900 leading-relaxed"
-                    />
-                  </div>
                 </div>
               )}
             </div>
@@ -864,11 +889,8 @@ export default function PRForm({
             <div className="flex items-center justify-between border-b pb-3">
               <DialogTitle className="flex items-center gap-2 text-base text-amber-900 font-extrabold">
                 <Heart className="w-4 h-4 text-amber-600 fill-current" />
-                「広報担当より」ポップアップカードの入力・編集
+                「広報担当より」のコメント
               </DialogTitle>
-              <Badge variant="amber" className="text-xs font-bold">
-                文章・画像の設定
-              </Badge>
             </div>
           </DialogHeader>
 
@@ -876,7 +898,7 @@ export default function PRForm({
             {/* Target Anchor Text */}
             <div className="bg-amber-50 p-3 rounded-xl border border-amber-200 space-y-1">
               <Label className="text-amber-900 font-bold block text-[11px]">
-                ハイライト対象テキスト（本文中のマーカー箇所）
+                ハイライトする文章
               </Label>
               <Input
                 value={editingNote.anchor}
@@ -887,9 +909,7 @@ export default function PRForm({
 
             {/* Popover Comment Text (文章) */}
             <div>
-              <Label className="text-gray-800 font-bold mb-1 block">
-                ポップアップカードに表示させる文章（広報担当者の補足コメント）
-              </Label>
+              <Label className="text-gray-800 font-bold mb-1 block">コメント</Label>
               <Textarea
                 value={editComment}
                 onChange={(e) => setEditComment(e.target.value)}
@@ -901,9 +921,7 @@ export default function PRForm({
 
             {/* Popover Image (画像) */}
             <div className="space-y-2">
-              <Label className="text-gray-800 font-bold mb-1 block">
-                ポップアップカードに表示させる画像（任意）
-              </Label>
+              <Label className="text-gray-800 font-bold mb-1 block">画像（任意）</Label>
               <Input
                 value={editImageUrl}
                 onChange={(e) => setEditImageUrl(e.target.value)}
@@ -934,7 +952,7 @@ export default function PRForm({
             {/* Live Popover Card Preview */}
             <div className="border border-amber-200 bg-[#fbf6ee] rounded-xl p-4 space-y-2 shadow-inner">
               <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-800 block">
-                ポップアップカードのライブプレビュー
+                プレビュー
               </span>
               <div className="bg-[#fbf6ee] border border-[#e2d2b6] p-4 rounded-md shadow-md space-y-2 relative">
                 <span className="text-[11px] font-bold text-[#a8703a] block">
@@ -964,6 +982,44 @@ export default function PRForm({
               </Button>
               <Button type="button" size="sm" className="bg-amber-600 hover:bg-amber-700 text-white font-bold" onClick={handleSaveEditedNote}>
                 保存する
+              </Button>
+            </div>
+          </div>
+        </Dialog>
+      )}
+
+      {/* Soft PR Clear-all Confirmation */}
+      {clearSoftPrConfirmOpen && (
+        <Dialog open={clearSoftPrConfirmOpen} onOpenChange={setClearSoftPrConfirmOpen}>
+          <div className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-red-700 text-lg">
+                <Trash2 className="w-5 h-5" />
+                やわらかPRの編集をすべて消しますか？
+              </DialogTitle>
+              <DialogDescription>
+                ハイライトのマーカー{softNotes.length}件・ポップアップカードの文章と画像・広報担当者名・記事末尾のメッセージを空にします。
+                プレスリリース本文はそのままで、「更新を配信」するまで公開中の内容も変わりません。
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="flex justify-end items-center gap-2 pt-4 border-t">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setClearSoftPrConfirmOpen(false)}
+              >
+                やめる
+              </Button>
+              <Button
+                type="button"
+                variant="destructive"
+                size="sm"
+                onClick={handleClearSoftPr}
+              >
+                <Trash2 className="w-3.5 h-3.5 mr-1" />
+                すべて消す
               </Button>
             </div>
           </div>

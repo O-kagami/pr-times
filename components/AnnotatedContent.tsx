@@ -59,18 +59,20 @@ export function AnnotatedContent({
         >
           {mark.anchor}
           <span
-            className={`absolute left-1/2 top-full z-30 mt-2 -translate-x-1/2 rounded-md border border-red-200 bg-white p-4 text-left font-normal leading-relaxed text-red-700 shadow-lg ${
+            className={`absolute left-1/2 top-full z-30 -translate-x-1/2 pt-2 ${
               activeMark === key ? "block" : "hidden"
             } ${compact ? "w-64 max-w-[85vw] text-xs" : "w-80 max-w-[85vw] text-sm"}`}
           >
-            {note.imageUrl && (
-              <img
-                src={note.imageUrl}
-                alt="補足イメージ"
-                className="mb-2 h-24 w-full rounded object-cover"
-              />
-            )}
-            {note.text}
+            <span className="block rounded-md border border-red-200 bg-white p-4 text-left font-normal leading-relaxed text-red-700 shadow-lg">
+              {note.imageUrl && (
+                <img
+                  src={note.imageUrl}
+                  alt="補足イメージ"
+                  className="mb-2 h-24 w-full rounded object-cover"
+                />
+              )}
+              {note.text}
+            </span>
           </span>
         </span>
       );
@@ -90,29 +92,36 @@ export function AnnotatedContent({
           }}
         >
           {mark.anchor}
+          {/* 本文と吹き出しの隙間は pt で作る。margin だと間にカーソルが落ちて消えてしまう */}
           <span
-            className={`absolute left-1/2 top-[calc(100%+12px)] z-30 w-80 max-w-[85vw] -translate-x-1/2 border border-[#e2d2b6] bg-[#fbf6ee] px-5 py-4 text-left shadow-xl cursor-default rounded-md transition-all ${
+            className={`absolute left-1/2 top-full z-30 w-80 max-w-[85vw] -translate-x-1/2 pt-3 ${
               activeMark === key ? "block animate-in fade-in" : "hidden"
             }`}
           >
-            <span className="absolute -top-[7px] left-1/2 h-3 w-3 -translate-x-1/2 rotate-45 border-t border-l border-[#e2d2b6] bg-[#fbf6ee]" />
-            {note.imageUrl && (
-              <img
-                src={note.imageUrl}
-                alt="広報補足画像"
-                className="mb-3 h-28 w-full rounded-sm object-cover border border-[#e2d2b6]"
-              />
-            )}
-            <span className="mb-2 flex items-center justify-between text-[11px] font-bold tracking-wide text-[#a8703a]">
-              <span>広報担当より</span>
-              {onSelectSoftNote && (
-                <span className="text-[10px] text-amber-700 underline font-normal">
-                  クリックして編集 ✏️
-                </span>
+            <span
+              className={`relative block rounded-md border border-[#e2d2b6] bg-[#fbf6ee] px-5 py-4 text-left shadow-xl transition-all ${
+                onSelectSoftNote ? "cursor-pointer hover:border-[#d9bf94]" : "cursor-default"
+              }`}
+            >
+              <span className="absolute -top-[7px] left-1/2 h-3 w-3 -translate-x-1/2 rotate-45 border-t border-l border-[#e2d2b6] bg-[#fbf6ee]" />
+              {note.imageUrl && (
+                <img
+                  src={note.imageUrl}
+                  alt="広報補足画像"
+                  className="mb-3 h-28 w-full rounded-sm object-cover border border-[#e2d2b6]"
+                />
               )}
-            </span>
-            <span className="block text-[13.5px] leading-relaxed text-[#443b2e] text-wrap-pretty">
-              {note.comment || "（コメント未入力 - クリックして入力）"}
+              <span className="mb-2 flex items-center justify-between text-[11px] font-bold tracking-wide text-[#a8703a]">
+                <span>広報担当より</span>
+                {onSelectSoftNote && (
+                  <span className="rounded-full bg-amber-600 px-2 py-0.5 text-[10px] font-bold text-white">
+                    クリックで編集
+                  </span>
+                )}
+              </span>
+              <span className="block text-[13.5px] leading-relaxed text-[#443b2e] text-wrap-pretty">
+                {note.comment || "（コメント未入力 - クリックして入力）"}
+              </span>
             </span>
           </span>
         </span>
