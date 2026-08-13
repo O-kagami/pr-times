@@ -107,12 +107,9 @@ export default function SeseragiHistoryPage() {
       : 100;
 
   const getCardClass = (index: number) => {
-    const diff = index - currentIndex;
-    if (diff < 0) return styles.cardSwiped;
-    if (diff === 0) return styles.cardActive;
-    if (diff === 1) return styles.cardLayer1;
-    if (diff === 2) return styles.cardLayer2;
-    return styles.cardHidden;
+    if (index < currentIndex) return styles.cardSwiped;
+    if (index === currentIndex) return styles.cardActive;
+    return styles.cardInactive;
   };
 
   return (
@@ -280,7 +277,10 @@ export default function SeseragiHistoryPage() {
                         onSwipe={(dir) => handleSwiped(dir, originalIndex)}
                         preventSwipe={["up", "down"]}
                       >
-                        <div className={`${styles.tinderCard} ${getCardClass(originalIndex)}`}>
+                        <div
+                          className={`${styles.tinderCard} ${getCardClass(originalIndex)}`}
+                          style={{ "--card-index": originalIndex } as React.CSSProperties}
+                        >
                           <div
                             className={styles.cardImage}
                             style={{
