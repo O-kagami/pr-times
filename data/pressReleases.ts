@@ -25,6 +25,7 @@ export interface InlineNote {
 export interface SoftPrNote {
   anchor: string;
   comment: string;
+  imageUrl?: string;
 }
 
 export interface SoftPr {
@@ -434,6 +435,8 @@ export const PRESS_RELEASES: PressRelease[] = [
           anchor: "白衣と探検隊の帽子を身につけて「キッズドクター」に変身！",
           comment:
             "スタッフの間で一番盛り上がったのがこの企画でした。白衣のサイズを何度も試着して決めています。子どもが親を診察する時間になるはずです。",
+          imageUrl:
+            "https://images.unsplash.com/photo-1584515933487-779824d29309?w=400&auto=format&fit=crop&q=80",
         },
         {
           anchor: "正しい応急処置（背部叩打法等）をわかりやすく解説する実践型の講演会",
