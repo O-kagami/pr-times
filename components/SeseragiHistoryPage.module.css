@@ -145,26 +145,21 @@
   gap: 22px;
 }
 
+/* The card itself is only a stage: the visible surfaces are the two .face elements inside it */
 .card {
-  display: flex;
-  min-height: 610px;
-  overflow: hidden;
-  flex-direction: column;
-  border: 1px solid #d7e1df;
-  border-radius: 20px;
-  background: #fff;
-  box-shadow: 0 14px 40px rgb(20 62 66 / 8%);
-  transition: transform 180ms ease, box-shadow 180ms ease;
+  position: relative;
+  height: 660px;
+  perspective: 1600px;
+  transition: transform 180ms ease;
 }
 
 .card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 22px 54px rgb(20 62 66 / 15%);
 }
 
 .cardImage {
   position: relative;
-  height: 330px;
+  height: 300px;
   flex: none;
   background-color: #c7d9d7;
   background-position: center;
@@ -217,8 +212,12 @@
   font-size: 11px;
 }
 
-.card h3 {
+.face h3 {
+  display: -webkit-box;
+  overflow: hidden;
   margin-top: 14px;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
   color: #17383b;
   font-size: 18px;
   font-weight: 800;
@@ -226,7 +225,11 @@
 }
 
 .summary {
+  display: -webkit-box;
+  overflow: hidden;
   margin-top: 12px;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
   color: #607374;
   font-size: 12px;
   line-height: 1.9;
@@ -320,17 +323,18 @@
   }
 
   .card {
-    min-height: 560px;
+    height: 640px;
   }
 
   .cardImage {
-    height: 300px;
+    height: 250px;
   }
 }
 
 /* Swiper Mode Styling */
 .modeSelector {
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
   gap: 12px;
   margin: 32px 0 24px;
@@ -568,19 +572,13 @@
 .tinderCard {
   position: absolute;
   inset: 0;
-  border-radius: 24px;
-  border: 1px solid #d7e1df;
-  background: #fff;
-  box-shadow: 0 20px 50px rgb(20 62 66 / 8%);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
+  perspective: 1600px;
   user-select: none;
   transform-origin: bottom center;
   will-change: transform, opacity;
 }
 
-.tinderCardActive {
+.tinderCardActive .face {
   box-shadow: 0 24px 60px rgb(8 124 132 / 16%);
   transition: box-shadow 0.4s ease;
 }
@@ -776,22 +774,6 @@
 }
 
 /* Instructions */
-.swipeInstructions {
-  display: flex;
-  justify-content: center;
-  gap: 24px;
-  margin-top: 16px;
-  font-size: 11px;
-  color: #7e9091;
-  font-weight: 700;
-}
-
-.swipeInstructions span {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
 /* Responsive adjustments */
 @media (max-width: 640px) {
   .deckContainer {
@@ -819,5 +801,204 @@
   .timelineLabel {
     font-size: 9px;
     margin-top: 6px;
+  }
+
+  .faceCompact .cardImage {
+    height: 232px;
+  }
+
+  .faceCompact h3 {
+    -webkit-line-clamp: 2;
+  }
+}
+
+/* Flip Card: front = the release as published, back = what the PR person wrote under it */
+.flipInner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 700ms cubic-bezier(0.2, 0.72, 0.18, 1);
+}
+
+.flipInnerFlipped {
+  transform: rotateY(180deg);
+}
+
+.face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  overflow: hidden;
+  flex-direction: column;
+  border: 1px solid #d7e1df;
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: 0 14px 40px rgb(20 62 66 / 8%);
+  backface-visibility: hidden;
+  transition: box-shadow 180ms ease;
+}
+
+.card:hover .face {
+  box-shadow: 0 22px 54px rgb(20 62 66 / 15%);
+}
+
+/* Back face: laid out like the back of a photo — a small print of it, then the note */
+.faceBack {
+  padding: 24px;
+  transform: rotateY(180deg);
+  border-color: #ebdfcb;
+  background: #fbf6ee;
+}
+
+.backHeader {
+  display: flex;
+  align-items: center;
+  flex: none;
+  gap: 12px;
+  padding-bottom: 14px;
+  border-bottom: 1px dashed #e3d6bf;
+}
+
+.backStamp {
+  width: 46px;
+  height: 46px;
+  flex: none;
+  border: 1px solid #e3d6bf;
+  border-radius: 6px;
+  background-position: center;
+  background-size: cover;
+  box-shadow: inset 0 0 0 3px #fff;
+}
+
+.backEyebrow {
+  display: block;
+  color: #a8703a;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.backDate {
+  display: block;
+  margin-top: 3px;
+  color: #9c8a72;
+  font-size: 10px;
+}
+
+.backMessage {
+  display: flex;
+  flex: 1;
+  overflow-y: auto;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 16px;
+  padding-right: 6px;
+  color: #3f372c;
+  font-family: "Hiragino Mincho ProN", "Yu Mincho", serif;
+  font-size: 13px;
+  line-height: 2;
+}
+
+.backMessage::-webkit-scrollbar {
+  width: 4px;
+}
+
+.backMessage::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: #e0d2ba;
+}
+
+.backSignature {
+  flex: none;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid #eee3d0;
+}
+
+.backAuthor {
+  color: #2f2921;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.backRole {
+  margin-top: 2px;
+  color: #907f68;
+  font-size: 10px;
+}
+
+/* Deck cards run at a tighter scale than the grid */
+.faceCompact {
+  border-radius: 24px;
+}
+
+.faceCompact .cardImage {
+  height: 260px;
+}
+
+.faceCompact .cardBody {
+  padding: 20px;
+}
+
+.faceCompact h3 {
+  margin-top: 10px;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.faceCompact .summary {
+  margin-top: 8px;
+  -webkit-line-clamp: 2;
+  line-height: 1.8;
+}
+
+.faceCompact .keywords {
+  padding-top: 12px;
+}
+
+.faceCompact .detailLink {
+  margin-top: 12px;
+  padding-top: 10px;
+}
+
+.faceBack.faceCompact {
+  padding: 20px;
+}
+
+.faceCompact .backMessage {
+  font-size: 12.5px;
+  line-height: 1.95;
+}
+
+/* The third tab: same weight as the two view switches, in the warm tone of the back face */
+.flipTab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.flipTab:hover {
+  border-color: #c8b493;
+  background: #fbf6ee;
+  color: #a8703a;
+}
+
+.flipTabActive,
+.flipTabActive:hover {
+  border-color: #a8703a;
+  background: #a8703a;
+  color: #fff;
+  box-shadow: 0 8px 20px rgb(168 112 58 / 24%);
+}
+
+.flipTabActive:hover {
+  border-color: #96612f;
+  background: #96612f;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flipInner {
+    transition: none;
   }
 }
