@@ -327,3 +327,424 @@
     height: 300px;
   }
 }
+
+/* Swiper Mode Styling */
+.modeSelector {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin: 32px 0 24px;
+}
+
+.modeTab {
+  padding: 10px 24px;
+  border-radius: 999px;
+  border: 1px solid #d7e1df;
+  background: #fff;
+  color: #527172;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 200ms ease;
+  box-shadow: 0 4px 12px rgb(20 62 66 / 4%);
+}
+
+.modeTab:hover {
+  border-color: #087c84;
+  color: #087c84;
+  background: #f4faf9;
+}
+
+.modeTabActive {
+  background: #087c84;
+  color: #fff;
+  border-color: #087c84;
+  box-shadow: 0 8px 20px rgb(8 124 132 / 24%);
+}
+
+.modeTabActive:hover {
+  background: #06666d;
+  color: #fff;
+  border-color: #06666d;
+}
+
+.swipeSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 20px;
+  width: 100%;
+}
+
+/* Timeline Swiper Layout */
+.timelineContainer {
+  width: 100%;
+  max-width: 720px;
+  margin-bottom: 40px;
+  padding: 0 20px;
+  position: relative;
+}
+
+.timelineTrack {
+  position: absolute;
+  top: 15px;
+  left: 40px;
+  right: 40px;
+  height: 3px;
+  background: #dce7e5;
+  z-index: 1;
+  border-radius: 99px;
+}
+
+.timelineProgress {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: #087c84;
+  border-radius: 99px;
+  transition: width 0.3s ease;
+}
+
+.timelineNodes {
+  display: flex;
+  justify-content: space-between;
+  position: relative;
+  z-index: 2;
+  width: 100%;
+}
+
+.timelineNode {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+}
+
+.timelineDot {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #fff;
+  border: 3px solid #dce7e5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 800;
+  color: #7a8c8d;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+.timelineNode:hover .timelineDot {
+  border-color: #087c84;
+  color: #087c84;
+  transform: scale(1.1);
+}
+
+.timelineDotActive {
+  background: #087c84;
+  border-color: #8ee4dd;
+  color: #fff;
+  box-shadow: 0 0 16px rgba(8, 124, 132, 0.5);
+  animation: pulse-dot 2s infinite;
+}
+
+.timelineDotCompleted {
+  background: #edf5f3;
+  border-color: #087c84;
+  color: #087c84;
+}
+
+@keyframes pulse-dot {
+  0% {
+    box-shadow: 0 0 0 0 rgba(8, 124, 132, 0.6);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(8, 124, 132, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(8, 124, 132, 0);
+  }
+}
+
+.timelineLabel {
+  margin-top: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #7e9091;
+  transition: color 0.3s ease;
+  white-space: nowrap;
+}
+
+.timelineNodeActive .timelineLabel {
+  color: #087c84;
+  font-weight: 800;
+}
+
+/* Tinder Card Deck */
+.deckContainer {
+  position: relative;
+  width: 100%;
+  max-width: 440px;
+  height: 580px;
+  margin: 0 auto;
+}
+
+.cardWrapper {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+}
+
+.cardWrapper:active {
+  cursor: grabbing;
+}
+
+.tinderCard {
+  width: 100%;
+  height: 100%;
+  border-radius: 24px;
+  border: 1px solid #d7e1df;
+  background: #fff;
+  box-shadow: 0 20px 50px rgb(20 62 66 / 8%);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  user-select: none;
+}
+
+/* Tinder Swiper Control Panel */
+.controlPanel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 36px;
+  width: 100%;
+}
+
+.controlButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 8px 24px rgb(20 62 66 / 10%);
+}
+
+.controlButton:active {
+  transform: scale(0.92);
+}
+
+.controlButton:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.swipeLeftButton {
+  width: 60px;
+  height: 60px;
+  background: #fff;
+  border: 2px solid #ea4335;
+  color: #ea4335;
+}
+
+.swipeLeftButton:not(:disabled):hover {
+  background: #ea4335;
+  color: #fff;
+  box-shadow: 0 10px 24px rgba(234, 67, 53, 0.35);
+}
+
+.swipeRightButton {
+  width: 60px;
+  height: 60px;
+  background: #fff;
+  border: 2px solid #34a853;
+  color: #34a853;
+}
+
+.swipeRightButton:not(:disabled):hover {
+  background: #34a853;
+  color: #fff;
+  box-shadow: 0 10px 24px rgba(52, 168, 83, 0.35);
+}
+
+.undoButton {
+  width: 48px;
+  height: 48px;
+  background: #fff;
+  border: 1px solid #fbbc05;
+  color: #fbbc05;
+}
+
+.undoButton:not(:disabled):hover {
+  background: #fbbc05;
+  color: #fff;
+  box-shadow: 0 8px 20px rgba(251, 188, 5, 0.3);
+}
+
+.resetButton {
+  width: 48px;
+  height: 48px;
+  background: #fff;
+  border: 1px solid #4285f4;
+  color: #4285f4;
+}
+
+.resetButton:not(:disabled):hover {
+  background: #4285f4;
+  color: #fff;
+  box-shadow: 0 8px 20px rgba(66, 133, 244, 0.3);
+}
+
+/* Swipe Indicator Overlay */
+.swipeFeedback {
+  position: absolute;
+  top: 30px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 20px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  transform: rotate(-10deg);
+  border: 4px solid;
+  opacity: 0.85;
+  z-index: 10;
+}
+
+.swipeFeedbackLeft {
+  right: 30px;
+  border-color: #ea4335;
+  color: #ea4335;
+}
+
+.swipeFeedbackRight {
+  left: 30px;
+  border-color: #34a853;
+  color: #34a853;
+}
+
+/* Journey End State */
+.journeyEnd {
+  width: 100%;
+  height: 100%;
+  border-radius: 24px;
+  border: 2px dashed #b9cbca;
+  background: #f0f5f4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.journeyEndIcon {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: #dcebe9;
+  color: #087c84;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+
+.journeyEnd h3 {
+  font-size: 20px;
+  font-weight: 800;
+  color: #0d3c42;
+  margin-bottom: 12px;
+  font-family: Georgia, "Yu Mincho", serif;
+}
+
+.journeyEnd p {
+  font-size: 13px;
+  line-height: 1.8;
+  color: #607374;
+  margin-bottom: 28px;
+  max-width: 280px;
+}
+
+.restartJourneyBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 28px;
+  background: #087c84;
+  color: #fff;
+  border: none;
+  border-radius: 99px;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 8px 24px rgba(8, 124, 132, 0.25);
+}
+
+.restartJourneyBtn:hover {
+  background: #06666d;
+  box-shadow: 0 12px 28px rgba(8, 124, 132, 0.35);
+  transform: translateY(-2px);
+}
+
+.restartJourneyBtn:active {
+  transform: translateY(0);
+}
+
+/* Instructions */
+.swipeInstructions {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  margin-top: 16px;
+  font-size: 11px;
+  color: #7e9091;
+  font-weight: 700;
+}
+
+.swipeInstructions span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .deckContainer {
+    max-width: 100%;
+    height: 520px;
+    padding: 0 8px;
+  }
+  
+  .timelineContainer {
+    padding: 0 10px;
+  }
+  
+  .timelineTrack {
+    left: 20px;
+    right: 20px;
+  }
+  
+  .timelineDot {
+    width: 24px;
+    height: 24px;
+    font-size: 8px;
+    border-width: 2px;
+  }
+  
+  .timelineLabel {
+    font-size: 9px;
+    margin-top: 6px;
+  }
+}

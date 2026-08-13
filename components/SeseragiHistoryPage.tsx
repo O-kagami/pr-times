@@ -1,8 +1,20 @@
 "use client";
 
-import { ArrowLeft, ArrowUpRight, CalendarDays, ChevronRight, HeartPulse } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowUpRight,
+  CalendarDays,
+  ChevronRight,
+  HeartPulse,
+  RotateCcw,
+  Undo2,
+  Sparkles,
+  ArrowRightLeft,
+  Check
+} from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
+import TinderCard from "react-tinder-card";
 import { SESERAGI_HISTORY } from "@/data/seseragiHistory";
 import { Footer } from "./Footer";
 import { Header } from "./Header";
@@ -10,6 +22,112 @@ import styles from "./SeseragiHistoryPage.module.css";
 
 export default function SeseragiHistoryPage() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [viewMode, setViewMode] = useState<"swipe" | "grid">("swipe");
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [, setLastDirection] = useState<string | null>(null);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  // Array of refs to control the Tinder Cards programmatically
+  const childRefs = useRef<React.RefObject<any>[]>([]);
+  if (childRefs.current.length !== SESERAGI_HISTORY.length) {
+    childRefs.current = Array(SESERAGI_HISTORY.length)
+      .fill(null)
+      .map(() => React.createRef());
+  }
+
+  const handleSwiped = (direction: string, index: number) => {
+    setLastDirection(direction);
+    setCurrentIndex((prevIndex) => {
+      if (index === prevIndex) {
+        return prevIndex + 1;
+      }
+      return prevIndex;
+    });
+  };
+
+  const handleSwipeButtonClick = (dir: "left" | "right") => {
+    if (currentIndex < SESERAGI_HISTORY.length && childRefs.current[currentIndex]?.current) {
+      childRefs.current[currentIndex].current.swipe(dir);
+    }
+  };
+
+  const handleUndo = async () => {
+    if (currentIndex > 0) {
+      const targetIndex = currentIndex - 1;
+      setCurrentIndex(targetIndex);
+      if (childRefs.current[targetIndex]?.current) {
+        await childRefs.current[targetIndex].current.restoreCard();
+      }
+    }
+  };
+
+  const handleReset = async () => {
+    // Restore cards from bottom to top
+    for (let i = SESERAGI_HISTORY.length - 1; i >= 0; i--) {
+      if (childRefs.current[i]?.current) {
+        await childRefs.current[i].current.restoreCard();
+      }
+    }
+    setLastDirection(null);
+    setCurrentIndex(0);
+  };
+
+  // We reverse the history items so that index 0 (newest) is rendered last and appears on top of the absolute stack
+  const reversedHistory = [...SESERAGI_HISTORY].reverse();
+
+  // Timeline variables
+  const timelineEvents = [...SESERAGI_HISTORY].reverse();
+  const activeTimelineIndex = SESERAGI_HISTORY.length - 1 - currentIndex;
+  const progressPercentage =
+    SESERAGI_HISTORY.length > 1
+      ? (activeTimelineIndex / (SESERAGI_HISTORY.length - 1)) * 100
+      : 100;
+
+  const getCardStyle = (index: number) => {
+    const diff = index - currentIndex;
+
+    if (diff < 0) {
+      return { display: "none" };
+    }
+
+    if (diff === 0) {
+      return {
+        zIndex: SESERAGI_HISTORY.length,
+        transform: "scale(1) translateY(0px)",
+        opacity: 1,
+        transition: "transform 0.3s ease, opacity 0.3s ease",
+      };
+    }
+
+    if (diff === 1) {
+      return {
+        zIndex: SESERAGI_HISTORY.length - 1,
+        transform: "scale(0.96) translateY(12px)",
+        opacity: 0.9,
+        transition: "transform 0.3s ease, opacity 0.3s ease",
+      };
+    }
+
+    if (diff === 2) {
+      return {
+        zIndex: SESERAGI_HISTORY.length - 2,
+        transform: "scale(0.92) translateY(24px)",
+        opacity: 0.75,
+        transition: "transform 0.3s ease, opacity 0.3s ease",
+      };
+    }
+
+    return {
+      zIndex: 0,
+      transform: "scale(0.88) translateY(36px)",
+      opacity: 0,
+      pointerEvents: "none" as const,
+    };
+  };
 
   return (
     <div className={styles.page}>
@@ -58,42 +176,253 @@ export default function SeseragiHistoryPage() {
             </div>
             <p>
               新しい診療拠点、親子向けイベント、日々の安心につながる情報を
-              新しいものから順に掲載しています。
+              インタラクティブなタイムラインまたは一覧でご覧いただけます。
             </p>
           </header>
 
-          <div className={styles.grid}>
-            {SESERAGI_HISTORY.map((item) => (
-              <article className={styles.card} key={item.id}>
-                <div
-                  className={styles.cardImage}
-                  style={{ backgroundImage: `url("${item.imageUrl}")` }}
-                >
-                  <span className={styles.category}>{item.category}</span>
-                  <span className={styles.elapsed}>{item.elapsed}</span>
-                </div>
-                <div className={styles.cardBody}>
-                  <time className={styles.date}>
-                    <CalendarDays aria-hidden="true" size={14} />
-                    {item.publishedAt}
-                  </time>
-                  <h3>{item.title}</h3>
-                  <p className={styles.summary}>{item.summary}</p>
-                  <div className={styles.keywords}>
-                    {item.keywords.map((keyword) => (
-                      <span key={keyword}>#{keyword}</span>
-                    ))}
-                  </div>
-                  {item.href && (
-                    <Link className={styles.detailLink} href={item.href}>
-                      この発信を詳しく見る
-                      <ArrowUpRight aria-hidden="true" size={16} />
-                    </Link>
-                  )}
-                </div>
-              </article>
-            ))}
+          <div className={styles.modeSelector}>
+            <button
+              onClick={() => setViewMode("swipe")}
+              className={`${styles.modeTab} ${viewMode === "swipe" ? styles.modeTabActive : ""}`}
+            >
+              スワイプ式タイムライン
+            </button>
+            <button
+              onClick={() => setViewMode("grid")}
+              className={`${styles.modeTab} ${viewMode === "grid" ? styles.modeTabActive : ""}`}
+            >
+              グリッド一覧
+            </button>
           </div>
+
+          {viewMode === "swipe" && isMounted ? (
+            <div className={styles.swipeSection}>
+              {/* Timeline Tracker */}
+              <div className={styles.timelineContainer}>
+                <div className={styles.timelineTrack}>
+                  <div
+                    className={styles.timelineProgress}
+                    style={{ width: `${progressPercentage}%` }}
+                  />
+                </div>
+                <div className={styles.timelineNodes}>
+                  {timelineEvents.map((item, index) => {
+                    const originalIndex = SESERAGI_HISTORY.length - 1 - index;
+                    const isActive = originalIndex === currentIndex;
+                    const isCompleted = originalIndex < currentIndex;
+
+                    const match = item.publishedAt.match(/(\d{4})年(\d{1,2})月/);
+                    const shortDate = match
+                      ? `${match[1].slice(-2)}/${match[2].padStart(2, "0")}`
+                      : item.publishedAt;
+
+                    return (
+                      <div
+                        key={item.id}
+                        onClick={async () => {
+                          if (originalIndex > currentIndex) {
+                            for (let i = currentIndex; i < originalIndex; i++) {
+                              if (childRefs.current[i]?.current) {
+                                childRefs.current[i].current.swipe("left");
+                              }
+                            }
+                          } else if (originalIndex < currentIndex) {
+                            for (let i = currentIndex - 1; i >= originalIndex; i--) {
+                              if (childRefs.current[i]?.current) {
+                                await childRefs.current[i].current.restoreCard();
+                              }
+                            }
+                            setCurrentIndex(originalIndex);
+                          }
+                        }}
+                        className={`${styles.timelineNode} ${
+                          isActive ? styles.timelineNodeActive : ""
+                        }`}
+                      >
+                        <div
+                          className={`${styles.timelineDot} ${
+                            isActive
+                              ? styles.timelineDotActive
+                              : isCompleted
+                              ? styles.timelineDotCompleted
+                              : ""
+                          }`}
+                        >
+                          {isCompleted ? <Check size={12} /> : shortDate.split("/")[1]}
+                        </div>
+                        <span className={styles.timelineLabel}>{shortDate}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Tinder Card Stack Container */}
+              <div className={styles.deckContainer}>
+                {currentIndex === SESERAGI_HISTORY.length ? (
+                  <div className={styles.journeyEnd}>
+                    <div className={styles.journeyEndIcon}>
+                      <Sparkles size={36} />
+                    </div>
+                    <h3>せせらぎの歴史をすべて振り返りました！</h3>
+                    <p>
+                      2014年の設立から、最新の365日小児クリニック開院まで、小児医療と子育て支援の歩みを辿りました。
+                    </p>
+                    <button onClick={handleReset} className={styles.restartJourneyBtn}>
+                      <RotateCcw size={16} />
+                      最初からもう一度見る
+                    </button>
+                  </div>
+                ) : (
+                  reversedHistory.map((item, index) => {
+                    const originalIndex = SESERAGI_HISTORY.length - 1 - index;
+                    return (
+                      <TinderCard
+                        ref={childRefs.current[originalIndex]}
+                        key={item.id}
+                        className={styles.cardWrapper}
+                        onSwipe={(dir) => handleSwiped(dir, originalIndex)}
+                        preventSwipe={["up", "down"]}
+                      >
+                        <div style={getCardStyle(originalIndex)} className={styles.tinderCard}>
+                          <div
+                            className={styles.cardImage}
+                            style={{
+                              backgroundImage: `url("${item.imageUrl}")`,
+                              height: "260px",
+                            }}
+                          >
+                            <span className={styles.category}>{item.category}</span>
+                            <span className={styles.elapsed}>{item.elapsed}</span>
+                          </div>
+                          <div className={styles.cardBody} style={{ padding: "20px" }}>
+                            <time className={styles.date}>
+                              <CalendarDays aria-hidden="true" size={14} />
+                              {item.publishedAt}
+                            </time>
+                            <h3
+                              style={{
+                                fontSize: "16px",
+                                marginTop: "10px",
+                                lineHeight: "1.5",
+                                fontWeight: 800,
+                              }}
+                            >
+                              {item.title}
+                            </h3>
+                            <p
+                              className={styles.summary}
+                              style={{
+                                fontSize: "12px",
+                                marginTop: "8px",
+                                display: "-webkit-box",
+                                WebkitLineClamp: 3,
+                                WebkitBoxOrient: "vertical",
+                                overflow: "hidden",
+                                lineHeight: "1.8",
+                              }}
+                            >
+                              {item.summary}
+                            </p>
+                            <div className={styles.keywords} style={{ paddingTop: "12px" }}>
+                              {item.keywords.map((keyword) => (
+                                <span key={keyword}>#{keyword}</span>
+                              ))}
+                            </div>
+                            {item.href && (
+                              <Link
+                                className={`${styles.detailLink} pressable`}
+                                href={item.href}
+                                style={{ marginTop: "12px", paddingTop: "10px" }}
+                              >
+                                この発信を詳しく見る
+                                <ArrowUpRight aria-hidden="true" size={15} />
+                              </Link>
+                            )}
+                          </div>
+                        </div>
+                      </TinderCard>
+                    );
+                  })
+                )}
+              </div>
+
+              {/* Tinder Swiper Control Panel */}
+              <div className={styles.controlPanel}>
+                <button
+                  onClick={handleReset}
+                  disabled={currentIndex === 0}
+                  className={`${styles.controlButton} ${styles.resetButton}`}
+                  title="最初から"
+                >
+                  <RotateCcw size={20} />
+                </button>
+                <button
+                  onClick={() => handleSwipeButtonClick("left")}
+                  disabled={currentIndex === SESERAGI_HISTORY.length}
+                  className={`${styles.controlButton} ${styles.swipeLeftButton}`}
+                  title="過去へ遡る"
+                >
+                  <ChevronRight className="rotate-180" size={24} />
+                </button>
+                <button
+                  onClick={() => handleSwipeButtonClick("right")}
+                  disabled={currentIndex === SESERAGI_HISTORY.length}
+                  className={`${styles.controlButton} ${styles.swipeRightButton}`}
+                  title="過去へ遡る"
+                >
+                  <ChevronRight size={24} />
+                </button>
+                <button
+                  onClick={handleUndo}
+                  disabled={currentIndex === 0}
+                  className={`${styles.controlButton} ${styles.undoButton}`}
+                  title="1つ戻す"
+                >
+                  <Undo2 size={20} />
+                </button>
+              </div>
+
+              <div className={styles.swipeInstructions}>
+                <span>
+                  <ArrowRightLeft size={14} /> 左右スワイプで歴史を遡れます
+                </span>
+              </div>
+            </div>
+          ) : (
+            <div className={styles.grid}>
+              {SESERAGI_HISTORY.map((item) => (
+                <article className={styles.card} key={item.id}>
+                  <div
+                    className={styles.cardImage}
+                    style={{ backgroundImage: `url("${item.imageUrl}")` }}
+                  >
+                    <span className={styles.category}>{item.category}</span>
+                    <span className={styles.elapsed}>{item.elapsed}</span>
+                  </div>
+                  <div className={styles.cardBody}>
+                    <time className={styles.date}>
+                      <CalendarDays aria-hidden="true" size={14} />
+                      {item.publishedAt}
+                    </time>
+                    <h3>{item.title}</h3>
+                    <p className={styles.summary}>{item.summary}</p>
+                    <div className={styles.keywords}>
+                      {item.keywords.map((keyword) => (
+                        <span key={keyword}>#{keyword}</span>
+                      ))}
+                    </div>
+                    {item.href && (
+                      <Link className={styles.detailLink} href={item.href}>
+                        この発信を詳しく見る
+                        <ArrowUpRight aria-hidden="true" size={16} />
+                      </Link>
+                    )}
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
 
           <p className={styles.demoNote}>
             ※ このHISTORYページは、医療法人せせらぎの既存デモ情報をもとに構成した静的表示です。
