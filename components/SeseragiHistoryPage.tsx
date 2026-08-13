@@ -72,8 +72,27 @@ export default function SeseragiHistoryPage() {
         await childRefs.current[i].current.restoreCard();
       }
     }
-    setLastDirection(null);
     setCurrentIndex(0);
+  };
+
+  const handleSliderChange = async (value: number) => {
+    const targetIndex = SESERAGI_HISTORY.length - 1 - value;
+    if (targetIndex === currentIndex) return;
+
+    if (targetIndex > currentIndex) {
+      for (let i = currentIndex; i < targetIndex; i++) {
+        if (childRefs.current[i]?.current) {
+          childRefs.current[i].current.swipe("left");
+        }
+      }
+    } else {
+      for (let i = currentIndex - 1; i >= targetIndex; i--) {
+        if (childRefs.current[i]?.current) {
+          await childRefs.current[i].current.restoreCard();
+        }
+      }
+    }
+    setCurrentIndex(targetIndex);
   };
 
   // We reverse the history items so that index 0 (newest) is rendered last and appears on top of the absolute stack
@@ -87,50 +106,13 @@ export default function SeseragiHistoryPage() {
       ? (activeTimelineIndex / (SESERAGI_HISTORY.length - 1)) * 100
       : 100;
 
-  const getCardStyle = (index: number) => {
+  const getCardClass = (index: number) => {
     const diff = index - currentIndex;
-
-    if (diff < 0) {
-      return { display: "none" };
-    }
-
-    if (diff === 0) {
-      return {
-        zIndex: SESERAGI_HISTORY.length,
-        transform: "scale(1) translateY(0px)",
-        transformOrigin: "bottom",
-        opacity: 1,
-        transition: "transform 0.3s ease, opacity 0.3s ease",
-      };
-    }
-
-    if (diff === 1) {
-      return {
-        zIndex: SESERAGI_HISTORY.length - 1,
-        transform: "scale(0.95) translateY(18px)",
-        transformOrigin: "bottom",
-        opacity: 0.9,
-        transition: "transform 0.3s ease, opacity 0.3s ease",
-      };
-    }
-
-    if (diff === 2) {
-      return {
-        zIndex: SESERAGI_HISTORY.length - 2,
-        transform: "scale(0.90) translateY(36px)",
-        transformOrigin: "bottom",
-        opacity: 0.75,
-        transition: "transform 0.3s ease, opacity 0.3s ease",
-      };
-    }
-
-    return {
-      zIndex: 0,
-      transform: "scale(0.85) translateY(54px)",
-      transformOrigin: "bottom",
-      opacity: 0,
-      pointerEvents: "none" as const,
-    };
+    if (diff < 0) return styles.cardSwiped;
+    if (diff === 0) return styles.cardActive;
+    if (diff === 1) return styles.cardLayer1;
+    if (diff === 2) return styles.cardLayer2;
+    return styles.cardHidden;
   };
 
   return (
@@ -209,6 +191,16 @@ export default function SeseragiHistoryPage() {
                     style={{ width: `${progressPercentage}%` }}
                   />
                 </div>
+                
+                <input
+                  type="range"
+                  min="0"
+                  max={SESERAGI_HISTORY.length - 1}
+                  value={activeTimelineIndex}
+                  onChange={(e) => handleSliderChange(Number(e.target.value))}
+                  className={styles.sliderRange}
+                />
+
                 <div className={styles.timelineNodes}>
                   {timelineEvents.map((item, index) => {
                     const originalIndex = SESERAGI_HISTORY.length - 1 - index;
@@ -288,7 +280,7 @@ export default function SeseragiHistoryPage() {
                         onSwipe={(dir) => handleSwiped(dir, originalIndex)}
                         preventSwipe={["up", "down"]}
                       >
-                        <div style={getCardStyle(originalIndex)} className={styles.tinderCard}>
+                        <div className={`${styles.tinderCard} ${getCardClass(originalIndex)}`}>
                           <div
                             className={styles.cardImage}
                             style={{

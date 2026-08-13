@@ -385,6 +385,72 @@
   position: relative;
 }
 
+.sliderRange {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 32px;
+  background: transparent;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 10;
+  cursor: pointer;
+  margin: 0;
+  padding: 0 36px; /* Align precisely with the centers of the timeline dots */
+  box-sizing: border-box;
+}
+
+.sliderRange:focus {
+  outline: none;
+}
+
+/* Chrome, Safari, Opera, newer Edge */
+.sliderRange::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #087c84;
+  border: 4px solid #fff;
+  box-shadow: 0 0 16px rgba(8, 124, 132, 0.6);
+  cursor: pointer;
+  transition: transform 0.1s ease, background-color 0.2s ease;
+}
+
+.sliderRange::-webkit-slider-thumb:hover {
+  background: #06666d;
+  transform: scale(1.15);
+}
+
+.sliderRange::-webkit-slider-thumb:active {
+  background: #05555c;
+  transform: scale(0.95);
+}
+
+/* Firefox */
+.sliderRange::-moz-range-thumb {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #087c84;
+  border: 4px solid #fff;
+  box-shadow: 0 0 16px rgba(8, 124, 132, 0.6);
+  cursor: pointer;
+  transition: transform 0.1s ease, background-color 0.2s ease;
+}
+
+.sliderRange::-moz-range-thumb:hover {
+  background: #06666d;
+  transform: scale(1.15);
+}
+
+.sliderRange::-moz-range-thumb:active {
+  background: #05555c;
+  transform: scale(0.95);
+}
+
 .timelineTrack {
   position: absolute;
   top: 15px;
@@ -514,6 +580,57 @@
   flex-direction: column;
   overflow: hidden;
   user-select: none;
+  transition: transform 0.4s cubic-bezier(0.165, 0.84, 0.44, 1), opacity 0.4s ease;
+}
+
+/* Horizontal layer shifts for card stacking */
+.cardActive {
+  z-index: 10;
+  transform: scale(1) translateX(0px);
+  transform-origin: right center;
+  opacity: 1;
+}
+
+.cardLayer1 {
+  z-index: 9;
+  transform: scale(0.95) translateX(-32px);
+  transform-origin: right center;
+  opacity: 0.9;
+}
+
+.cardLayer2 {
+  z-index: 8;
+  transform: scale(0.90) translateX(-64px);
+  transform-origin: right center;
+  opacity: 0.75;
+}
+
+.cardHidden {
+  z-index: 0;
+  transform: scale(0.85) translateX(-96px);
+  transform-origin: right center;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.cardSwiped {
+  display: none;
+}
+
+/* Mobile responsive card offsets */
+@media (max-width: 640px) {
+  .cardLayer1 {
+    transform: scale(0.96) translateX(-16px);
+    transform-origin: right center;
+  }
+  .cardLayer2 {
+    transform: scale(0.92) translateX(-32px);
+    transform-origin: right center;
+  }
+  .cardHidden {
+    transform: scale(0.88) translateX(-48px);
+    transform-origin: right center;
+  }
 }
 
 /* Tinder Swiper Control Panel */
