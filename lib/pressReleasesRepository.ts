@@ -12,7 +12,6 @@ export const listPressReleases = async (): Promise<PressRelease[]> => {
     .selectFrom("press_releases")
     .select(["payload", "updated_at"])
     .orderBy("updated_at", "desc")
-    .where('title', '=', '医療法人せせらぎ')
     .execute();
 
   const releases = rows
