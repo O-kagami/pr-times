@@ -53,13 +53,13 @@ export function AnnotatedContent({
       parts.push(
         <span
           key={key}
-          className="relative inline cursor-help rounded-sm bg-amber-100 px-0.5 font-semibold decoration-amber-500 decoration-2 underline underline-offset-2 transition-colors hover:bg-amber-200"
+          className="relative inline cursor-help rounded-md bg-amber-100 px-1 font-semibold decoration-amber-500 decoration-2 underline underline-offset-2 transition-colors hover:bg-amber-200"
           onMouseEnter={() => setActiveMark(key)}
           onMouseLeave={() => setActiveMark(null)}
         >
           {mark.anchor}
           <span
-            className={`absolute left-1/2 top-full z-30 mt-2 -translate-x-1/2 rounded-md border border-red-200 bg-white p-4 text-left font-normal leading-relaxed text-red-700 shadow-lg ${
+            className={`absolute left-1/2 top-full z-30 mt-2 -translate-x-1/2 rounded-2xl border border-red-200 bg-white p-4 text-left font-normal leading-relaxed text-red-700 shadow-lg ${
               activeMark === key ? "block" : "hidden"
             } ${compact ? "w-64 max-w-[85vw] text-xs" : "w-80 max-w-[85vw] text-sm"}`}
           >
@@ -67,7 +67,7 @@ export function AnnotatedContent({
               <img
                 src={note.imageUrl}
                 alt="補足イメージ"
-                className="mb-2 h-24 w-full rounded object-cover"
+                className="mb-2 h-24 w-full rounded-xl object-cover"
               />
             )}
             {note.text}
@@ -79,7 +79,7 @@ export function AnnotatedContent({
       parts.push(
         <span
           key={key}
-          className="relative inline cursor-pointer bg-[linear-gradient(transparent_62%,#f7e3b4_62%)] pb-px group"
+          className="relative inline cursor-pointer rounded-[4px] bg-[linear-gradient(transparent_58%,#fae4bb_58%)] px-0.5 pb-px transition-colors hover:bg-[linear-gradient(transparent_0%,#fbeed6_0%)] group"
           onMouseEnter={() => setActiveMark(key)}
           onMouseLeave={() => setActiveMark(null)}
           onClick={(e) => {
@@ -91,16 +91,16 @@ export function AnnotatedContent({
         >
           {mark.anchor}
           <span
-            className={`absolute left-1/2 top-[calc(100%+12px)] z-30 w-80 max-w-[85vw] -translate-x-1/2 border border-[#e2d2b6] bg-[#fbf6ee] px-5 py-4 text-left shadow-xl cursor-default rounded-md transition-all ${
+            className={`absolute left-1/2 top-[calc(100%+12px)] z-30 w-80 max-w-[85vw] -translate-x-1/2 border border-[#e2d2b6] bg-[#fdf3e4] px-6 py-5 text-left shadow-[0_8px_28px_rgba(168,112,58,0.18)] cursor-default rounded-[28px] transition-all ${
               activeMark === key ? "block animate-in fade-in" : "hidden"
             }`}
           >
-            <span className="absolute -top-[7px] left-1/2 h-3 w-3 -translate-x-1/2 rotate-45 border-t border-l border-[#e2d2b6] bg-[#fbf6ee]" />
+            <span className="absolute -top-[7px] left-1/2 h-3 w-3 -translate-x-1/2 rotate-45 rounded-[4px] border-t border-l border-[#e2d2b6] bg-[#fdf3e4]" />
             {note.imageUrl && (
               <img
                 src={note.imageUrl}
                 alt="広報補足画像"
-                className="mb-3 h-28 w-full rounded-sm object-cover border border-[#e2d2b6]"
+                className="mb-3 h-28 w-full rounded-2xl object-cover border border-[#e2d2b6]"
               />
             )}
             <span className="mb-2 flex items-center justify-between text-[11px] font-bold tracking-wide text-[#a8703a]">
