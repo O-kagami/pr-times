@@ -8,110 +8,212 @@ import {
   ChevronLeft,
   HeartPulse,
   RotateCcw,
-  Undo2,
-  Sparkles,
-  ArrowRightLeft,
-  Check
+  ArrowRightLeft
 } from "lucide-react";
 import Link from "next/link";
-import React, { useState, useRef, useEffect } from "react";
-import TinderCard from "react-tinder-card";
-import { SESERAGI_HISTORY } from "@/data/seseragiHistory";
+import {
+  animate,
+  motion,
+  useMotionValue,
+  useMotionValueEvent,
+  useTransform,
+  type MotionValue,
+  type PanInfo,
+} from "motion/react";
+import React, { useEffect, useRef, useState } from "react";
+import { SESERAGI_HISTORY, type SeseragiHistoryItem } from "@/data/seseragiHistory";
 import { Footer } from "./Footer";
 import { Header } from "./Header";
 import styles from "./SeseragiHistoryPage.module.css";
+
+const LAST_INDEX = SESERAGI_HISTORY.length - 1;
+
+/** Cards beyond this distance stack together instead of drifting off-page */
+const MAX_VISUAL_OFFSET = 3;
+
+/** Horizontal gap between neighbouring cards, in px */
+const SPACING_DESKTOP = 80;
+const SPACING_MOBILE = 46;
+
+/** Every settle runs on this spring, so a release carries its own velocity into the motion */
+const SETTLE_SPRING = { type: "spring" as const, stiffness: 50, damping: 30, mass: 0.9 };
+
+/** Seconds of fling projected forward when choosing which card to land on */
+const FLING_PROJECTION = 0.28;
+
+/** Resistance applied while dragging past the first or last card */
+const EDGE_RESISTANCE = 0.3;
+
+const clamp = (value: number, min: number, max: number) =>
+  Math.min(max, Math.max(min, value));
+
+/**
+ * The data is newest-first, but the deck and the timeline both read past → future.
+ * Chronological position: 0 = oldest (far left), LAST_INDEX = newest (far right).
+ */
+const toChrono = (index: number) => LAST_INDEX - index;
+
+/**
+ * One card in the deck. Its whole appearance is derived from the shared position value,
+ * so the fan keeps re-forming continuously while a drag is in progress — not just on release.
+ */
+function HistoryCard({
+  item,
+  chrono,
+  position,
+  spacing,
+  isActive,
+}: {
+  item: SeseragiHistoryItem;
+  chrono: number;
+  position: MotionValue<number>;
+  spacing: MotionValue<number>;
+  isActive: boolean;
+}) {
+  // Signed distance from the active card: negative = older (left), positive = newer (right)
+  const offset = useTransform(position, (p) =>
+    clamp(chrono - p, -MAX_VISUAL_OFFSET, MAX_VISUAL_OFFSET)
+  );
+
+  const x = useTransform([offset, spacing], ([o, s]: number[]) => o * s);
+  const y = useTransform(offset, (o) => Math.abs(o) * 10);
+  const rotate = useTransform(offset, (o) => o * 3);
+  const scale = useTransform(offset, (o) => 1 - Math.abs(o) * 0.08);
+  const opacity = useTransform(offset, (o) => Math.max(0.35, 1 - Math.abs(o) * 0.22));
+  const zIndex = useTransform(offset, (o) => 100 - Math.round(Math.abs(o)));
+
+  return (
+    <motion.div
+      className={`${styles.tinderCard} ${
+        isActive ? styles.tinderCardActive : styles.tinderCardInactive
+      }`}
+      style={{ x, y, rotate, scale, opacity, zIndex }}
+    >
+      <div
+        className={styles.cardImage}
+        style={{
+          backgroundImage: `url("${item.imageUrl}")`,
+          height: "260px",
+        }}
+      >
+        <span className={styles.category}>{item.category}</span>
+        <span className={styles.elapsed}>{item.elapsed}</span>
+      </div>
+      <div className={styles.cardBody} style={{ padding: "20px" }}>
+        <time className={styles.date}>
+          <CalendarDays aria-hidden="true" size={14} />
+          {item.publishedAt}
+        </time>
+        <h3
+          style={{
+            fontSize: "16px",
+            marginTop: "10px",
+            lineHeight: "1.5",
+            fontWeight: 800,
+          }}
+        >
+          {item.title}
+        </h3>
+        <p
+          className={styles.summary}
+          style={{
+            fontSize: "12px",
+            marginTop: "8px",
+            display: "-webkit-box",
+            WebkitLineClamp: 3,
+            WebkitBoxOrient: "vertical",
+            overflow: "hidden",
+            lineHeight: "1.8",
+          }}
+        >
+          {item.summary}
+        </p>
+        <div className={styles.keywords} style={{ paddingTop: "12px" }}>
+          {item.keywords.map((keyword) => (
+            <span key={keyword}>#{keyword}</span>
+          ))}
+        </div>
+        {item.href && (
+          <Link
+            className={`${styles.detailLink} pressable`}
+            href={item.href}
+            style={{ marginTop: "12px", paddingTop: "10px" }}
+            draggable={false}
+          >
+            この発信を詳しく見る
+            <ArrowUpRight aria-hidden="true" size={15} />
+          </Link>
+        )}
+      </div>
+    </motion.div>
+  );
+}
 
 export default function SeseragiHistoryPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"swipe" | "grid">("swipe");
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [, setLastDirection] = useState<string | null>(null);
-  const [isMounted, setIsMounted] = useState(false);
+
+  /** Fractional chronological position of the deck. Everything visual is derived from this. */
+  const position = useMotionValue(toChrono(0));
+  const spacing = useMotionValue(SPACING_DESKTOP);
+  const panOrigin = useRef(0);
 
   useEffect(() => {
-    setIsMounted(true);
-  }, []);
+    const query = window.matchMedia("(max-width: 640px)");
+    const sync = () => spacing.set(query.matches ? SPACING_MOBILE : SPACING_DESKTOP);
 
-  // Array of refs to control the Tinder Cards programmatically
-  const childRefs = useRef<React.RefObject<any>[]>([]);
-  if (childRefs.current.length !== SESERAGI_HISTORY.length) {
-    childRefs.current = Array(SESERAGI_HISTORY.length)
-      .fill(null)
-      .map(() => React.createRef());
-  }
+    sync();
+    query.addEventListener("change", sync);
+    return () => query.removeEventListener("change", sync);
+  }, [spacing]);
 
-  const handleSwiped = (direction: string, index: number) => {
-    setLastDirection(direction);
-    setCurrentIndex((prevIndex) => {
-      if (index === prevIndex) {
-        return prevIndex + 1;
-      }
-      return prevIndex;
-    });
+  // Keep the timeline in step with the deck, whether it is being dragged or springing into place
+  useMotionValueEvent(position, "change", (value) => {
+    const nearest = LAST_INDEX - clamp(Math.round(value), 0, LAST_INDEX);
+    setCurrentIndex((previous) => (previous === nearest ? previous : nearest));
+  });
+
+  const settleAt = (chrono: number, velocity = 0) => {
+    animate(position, clamp(chrono, 0, LAST_INDEX), { ...SETTLE_SPRING, velocity });
   };
 
-  const handleSwipeButtonClick = (dir: "left" | "right") => {
-    if (currentIndex < SESERAGI_HISTORY.length && childRefs.current[currentIndex]?.current) {
-      childRefs.current[currentIndex].current.swipe(dir);
-    }
+  const goTo = (index: number) => {
+    position.stop();
+    settleAt(toChrono(clamp(index, 0, LAST_INDEX)));
   };
 
-  const handleUndo = async () => {
-    if (currentIndex > 0) {
-      const targetIndex = currentIndex - 1;
-      setCurrentIndex(targetIndex);
-      if (childRefs.current[targetIndex]?.current) {
-        await childRefs.current[targetIndex].current.restoreCard();
-      }
-    }
+  const handlePanStart = () => {
+    position.stop();
+    panOrigin.current = position.get();
   };
 
-  const handleReset = async () => {
-    // Restore cards from bottom to top
-    for (let i = SESERAGI_HISTORY.length - 1; i >= 0; i--) {
-      if (childRefs.current[i]?.current) {
-        await childRefs.current[i].current.restoreCard();
-      }
-    }
-    setCurrentIndex(0);
-  };
+  const handlePan = (_event: PointerEvent, info: PanInfo) => {
+    // Dragging left moves the deck towards the newer cards waiting on the right
+    const raw = panOrigin.current - info.offset.x / spacing.get();
 
-  const handleSliderChange = async (value: number) => {
-    const targetIndex = SESERAGI_HISTORY.length - 1 - value;
-    if (targetIndex === currentIndex) return;
-
-    if (targetIndex > currentIndex) {
-      for (let i = currentIndex; i < targetIndex; i++) {
-        if (childRefs.current[i]?.current) {
-          childRefs.current[i].current.swipe("left");
-        }
-      }
+    if (raw < 0) {
+      position.set(raw * EDGE_RESISTANCE);
+    } else if (raw > LAST_INDEX) {
+      position.set(LAST_INDEX + (raw - LAST_INDEX) * EDGE_RESISTANCE);
     } else {
-      for (let i = currentIndex - 1; i >= targetIndex; i--) {
-        if (childRefs.current[i]?.current) {
-          await childRefs.current[i].current.restoreCard();
-        }
-      }
+      position.set(raw);
     }
-    setCurrentIndex(targetIndex);
   };
 
-  // We reverse the history items so that index 0 (newest) is rendered last and appears on top of the absolute stack
-  const reversedHistory = [...SESERAGI_HISTORY].reverse();
+  const handlePanEnd = (_event: PointerEvent, info: PanInfo) => {
+    // Carry the release velocity into the spring so a flick keeps travelling and decays naturally
+    const velocity = -info.velocity.x / spacing.get();
+    const projected = position.get() + velocity * FLING_PROJECTION;
 
-  // Timeline variables
+    settleAt(Math.round(projected), velocity);
+  };
+
+  // The timeline is rendered oldest (left) to newest (right)
   const timelineEvents = [...SESERAGI_HISTORY].reverse();
-  const activeTimelineIndex = SESERAGI_HISTORY.length - 1 - currentIndex;
+  const activeTimelineIndex = toChrono(currentIndex);
   const progressPercentage =
-    SESERAGI_HISTORY.length > 1
-      ? (activeTimelineIndex / (SESERAGI_HISTORY.length - 1)) * 100
-      : 100;
-
-  const getCardClass = (index: number) => {
-    if (index < currentIndex) return styles.cardSwiped;
-    if (index === currentIndex) return styles.cardActive;
-    return styles.cardInactive;
-  };
+    SESERAGI_HISTORY.length > 1 ? (activeTimelineIndex / LAST_INDEX) * 100 : 100;
 
   return (
     <div className={styles.page}>
@@ -179,7 +281,7 @@ export default function SeseragiHistoryPage() {
             </button>
           </div>
 
-          {viewMode === "swipe" && isMounted ? (
+          {viewMode === "swipe" ? (
             <div className={styles.swipeSection}>
               {/* Timeline Tracker */}
               <div className={styles.timelineContainer}>
@@ -189,21 +291,22 @@ export default function SeseragiHistoryPage() {
                     style={{ width: `${progressPercentage}%` }}
                   />
                 </div>
-                
+
                 <input
                   type="range"
                   min="0"
-                  max={SESERAGI_HISTORY.length - 1}
+                  max={LAST_INDEX}
                   value={activeTimelineIndex}
-                  onChange={(e) => handleSliderChange(Number(e.target.value))}
+                  onChange={(e) => goTo(LAST_INDEX - Number(e.target.value))}
                   className={styles.sliderRange}
                 />
 
                 <div className={styles.timelineNodes}>
                   {timelineEvents.map((item, index) => {
-                    const originalIndex = SESERAGI_HISTORY.length - 1 - index;
+                    const originalIndex = LAST_INDEX - index;
                     const isActive = originalIndex === currentIndex;
-                    const isCompleted = originalIndex < currentIndex;
+                    // Older than the active card, so it sits left of it — the stretch the progress bar fills
+                    const isPast = originalIndex > currentIndex;
 
                     const match = item.publishedAt.match(/(\d{4})年(\d{1,2})月/);
                     const shortDate = match
@@ -213,22 +316,7 @@ export default function SeseragiHistoryPage() {
                     return (
                       <div
                         key={item.id}
-                        onClick={async () => {
-                          if (originalIndex > currentIndex) {
-                            for (let i = currentIndex; i < originalIndex; i++) {
-                              if (childRefs.current[i]?.current) {
-                                childRefs.current[i].current.swipe("left");
-                              }
-                            }
-                          } else if (originalIndex < currentIndex) {
-                            for (let i = currentIndex - 1; i >= originalIndex; i--) {
-                              if (childRefs.current[i]?.current) {
-                                await childRefs.current[i].current.restoreCard();
-                              }
-                            }
-                            setCurrentIndex(originalIndex);
-                          }
-                        }}
+                        onClick={() => goTo(originalIndex)}
                         className={`${styles.timelineNode} ${
                           isActive ? styles.timelineNodeActive : ""
                         }`}
@@ -237,12 +325,12 @@ export default function SeseragiHistoryPage() {
                           className={`${styles.timelineDot} ${
                             isActive
                               ? styles.timelineDotActive
-                              : isCompleted
-                              ? styles.timelineDotCompleted
+                              : isPast
+                              ? styles.timelineDotPast
                               : ""
                           }`}
                         >
-                          {isCompleted ? <Check size={12} /> : shortDate.split("/")[1]}
+                          {shortDate.split("/")[1]}
                         </div>
                         <span className={styles.timelineLabel}>{shortDate}</span>
                       </div>
@@ -251,104 +339,46 @@ export default function SeseragiHistoryPage() {
                 </div>
               </div>
 
-              {/* Tinder Card Stack Container */}
-              <div className={styles.deckContainer}>
-                {reversedHistory.map((item, index) => {
-                  const originalIndex = SESERAGI_HISTORY.length - 1 - index;
-                  return (
-                    <TinderCard
-                      ref={childRefs.current[originalIndex]}
-                      key={item.id}
-                      className={styles.cardWrapper}
-                      onSwipe={(dir) => handleSwiped(dir, originalIndex)}
-                      preventSwipe={["up", "down"]}
-                    >
-                      <div
-                        className={`${styles.tinderCard} ${getCardClass(originalIndex)}`}
-                        style={{ "--card-index": originalIndex } as React.CSSProperties}
-                      >
-                        <div
-                          className={styles.cardImage}
-                          style={{
-                            backgroundImage: `url("${item.imageUrl}")`,
-                            height: "260px",
-                          }}
-                        >
-                          <span className={styles.category}>{item.category}</span>
-                          <span className={styles.elapsed}>{item.elapsed}</span>
-                        </div>
-                        <div className={styles.cardBody} style={{ padding: "20px" }}>
-                          <time className={styles.date}>
-                            <CalendarDays aria-hidden="true" size={14} />
-                            {item.publishedAt}
-                          </time>
-                          <h3
-                            style={{
-                              fontSize: "16px",
-                              marginTop: "10px",
-                              lineHeight: "1.5",
-                              fontWeight: 800,
-                            }}
-                          >
-                            {item.title}
-                          </h3>
-                          <p
-                            className={styles.summary}
-                            style={{
-                              fontSize: "12px",
-                              marginTop: "8px",
-                              display: "-webkit-box",
-                              WebkitLineClamp: 3,
-                              WebkitBoxOrient: "vertical",
-                              overflow: "hidden",
-                              lineHeight: "1.8",
-                            }}
-                          >
-                            {item.summary}
-                          </p>
-                          <div className={styles.keywords} style={{ paddingTop: "12px" }}>
-                            {item.keywords.map((keyword) => (
-                              <span key={keyword}>#{keyword}</span>
-                            ))}
-                          </div>
-                          {item.href && (
-                            <Link
-                              className={`${styles.detailLink} pressable`}
-                              href={item.href}
-                              style={{ marginTop: "12px", paddingTop: "10px" }}
-                            >
-                              この発信を詳しく見る
-                              <ArrowUpRight aria-hidden="true" size={15} />
-                            </Link>
-                          )}
-                        </div>
-                      </div>
-                    </TinderCard>
-                  );
-                })}
-              </div>
+              {/* Carousel deck: every card stays mounted and slides, none are unmounted on swipe */}
+              <motion.div
+                className={styles.deckContainer}
+                onPanStart={handlePanStart}
+                onPan={handlePan}
+                onPanEnd={handlePanEnd}
+              >
+                {SESERAGI_HISTORY.map((item, index) => (
+                  <HistoryCard
+                    key={item.id}
+                    item={item}
+                    chrono={toChrono(index)}
+                    position={position}
+                    spacing={spacing}
+                    isActive={index === currentIndex}
+                  />
+                ))}
+              </motion.div>
 
-              {/* Tinder Swiper Control Panel */}
+              {/* Deck Control Panel */}
               <div className={styles.controlPanel}>
                 <button
-                  onClick={handleReset}
+                  onClick={() => goTo(0)}
                   disabled={currentIndex === 0}
                   className={`${styles.controlButton} ${styles.resetButton}`}
-                  title="最初に戻る"
+                  title="最新に戻る"
                 >
                   <RotateCcw size={20} />
                 </button>
                 <button
-                  onClick={() => handleSliderChange(activeTimelineIndex - 1)}
-                  disabled={activeTimelineIndex === 0}
+                  onClick={() => goTo(currentIndex + 1)}
+                  disabled={currentIndex === LAST_INDEX}
                   className={`${styles.controlButton} ${styles.swipeLeftButton}`}
                   title="過去（古い年代）へ"
                 >
                   <ChevronLeft size={24} />
                 </button>
                 <button
-                  onClick={() => handleSliderChange(activeTimelineIndex + 1)}
-                  disabled={activeTimelineIndex === SESERAGI_HISTORY.length - 1}
+                  onClick={() => goTo(currentIndex - 1)}
+                  disabled={currentIndex === 0}
                   className={`${styles.controlButton} ${styles.swipeRightButton}`}
                   title="未来（新しい年代）へ"
                 >

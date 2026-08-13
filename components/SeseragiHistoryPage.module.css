@@ -517,7 +517,7 @@
   animation: pulse-dot 2s infinite;
 }
 
-.timelineDotCompleted {
+.timelineDotPast {
   background: #edf5f3;
   border-color: #087c84;
   color: #087c84;
@@ -549,29 +549,25 @@
   font-weight: 800;
 }
 
-/* Tinder Card Deck */
+/* Carousel Deck */
+/* Card position, rotation, scale and opacity are all driven by Motion, so no CSS transition here */
 .deckContainer {
   position: relative;
   width: 100%;
   max-width: 440px;
   height: 580px;
   margin: 0 auto;
-}
-
-.cardWrapper {
-  position: absolute;
-  width: 100%;
-  height: 100%;
   cursor: grab;
+  touch-action: pan-y;
 }
 
-.cardWrapper:active {
+.deckContainer:active {
   cursor: grabbing;
 }
 
 .tinderCard {
-  width: 100%;
-  height: 100%;
+  position: absolute;
+  inset: 0;
   border-radius: 24px;
   border: 1px solid #d7e1df;
   background: #fff;
@@ -580,37 +576,17 @@
   flex-direction: column;
   overflow: hidden;
   user-select: none;
-  transition: transform 0.4s cubic-bezier(0.165, 0.84, 0.44, 1), opacity 0.4s ease;
-}
-
-/* Horizontal layer shifts based on chronological card index (older = left, newer = right) */
-.tinderCard {
-  --card-offset: calc((2.5 - var(--card-index)) * 72px);
-}
-
-@media (max-width: 640px) {
-  .tinderCard {
-    --card-offset: calc((2.5 - var(--card-index)) * 24px);
-  }
-}
-
-.cardActive {
-  z-index: 10;
-  transform: translateX(var(--card-offset)) translateY(0px) rotate(0deg) scale(1);
   transform-origin: bottom center;
-  opacity: 1;
+  will-change: transform, opacity;
+}
+
+.tinderCardActive {
   box-shadow: 0 24px 60px rgb(8 124 132 / 16%);
+  transition: box-shadow 0.4s ease;
 }
 
-.cardInactive {
-  z-index: calc(10 - var(--card-index));
-  transform: translateX(var(--card-offset)) translateY(32px) rotate(calc((2.5 - var(--card-index)) * 3deg)) scale(0.86);
-  transform-origin: bottom center;
-  opacity: 0.65;
-}
-
-.cardSwiped {
-  display: none;
+.tinderCardInactive {
+  pointer-events: none;
 }
 
 /* Tinder Swiper Control Panel */
