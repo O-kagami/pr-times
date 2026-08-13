@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
+import Link from "next/link";
 import { Header } from "@/components/Header";
 import { CategoryNav } from "@/components/CategoryNav";
 import { RankingSection } from "@/components/RankingSection";
@@ -22,9 +23,35 @@ export default function Home() {
   const [activeKeyword, setActiveKeyword] = useState<string | null>(null);
   const [visibleCount, setVisibleCount] = useState(8);
   const [selectedRelease, setSelectedRelease] = useState<PressRelease | null>(null);
+  const [pressReleases, setPressReleases] = useState<PressRelease[]>(PRESS_RELEASES);
+
+  useEffect(() => {
+    let isActive = true;
+
+    const fetchPressReleases = async () => {
+      try {
+        const response = await fetch("/api/press-releases", { cache: "no-store" });
+        if (!response.ok) {
+          return;
+        }
+
+        const json = (await response.json()) as { data?: PressRelease[] };
+        if (isActive && Array.isArray(json.data) && json.data.length > 0) {
+          setPressReleases(json.data);
+        }
+      } catch (error) {
+        console.error("Failed to load press releases", error);
+      }
+    };
+
+    fetchPressReleases();
+    return () => {
+      isActive = false;
+    };
+  }, []);
 
   const filteredReleases = useMemo(() => {
-    return PRESS_RELEASES.filter((release) => {
+    return pressReleases.filter((release) => {
       if (selectedCategory !== "all") {
         const catObj = CATEGORIES.find((c) => c.id === selectedCategory);
         if (catObj && release.category !== catObj.name) {
@@ -47,7 +74,7 @@ export default function Home() {
 
       return true;
     });
-  }, [searchQuery, selectedCategory, activeKeyword]);
+  }, [searchQuery, selectedCategory, activeKeyword, pressReleases]);
 
   const visibleReleases = filteredReleases.slice(0, visibleCount);
   const hasMore = visibleCount < filteredReleases.length;
@@ -73,11 +100,25 @@ export default function Home() {
       />
 
       <RankingSection
-        pressReleases={PRESS_RELEASES}
+        pressReleases={pressReleases}
         onSelectRelease={(rel) => setSelectedRelease(rel)}
       />
 
       <main className="flex-1 mx-auto px-4 py-6 w-full max-w-[1200px]">
+        <div className="mb-4 rounded border border-sky-200 bg-sky-50 px-4 py-3">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-xs sm:text-sm text-[#1f3a5f]">
+              DB の <strong>company_name</strong> 一覧を確認できます。
+            </p>
+            <Link
+              href="/company-names"
+              className="inline-flex items-center justify-center rounded border border-[#0066cc] bg-white px-4 py-1.5 text-xs font-bold text-[#0066cc] hover:bg-sky-100"
+            >
+              company_name 一覧を見る
+            </Link>
+          </div>
+        </div>
+
         <div className="items-start gap-8 grid grid-cols-1 lg:grid-cols-12">
           <section className="flex flex-col gap-4 lg:col-span-8">
             <div className="flex justify-between items-center bg-white shadow-xs p-3.5 border border-gray-200 rounded">

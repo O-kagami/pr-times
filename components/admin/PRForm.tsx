@@ -272,16 +272,38 @@ export default function PRForm({ initialData = {}, isNew = false }: PRFormProps)
   };
 
   // Submit Handler
-  const handleSave = (e: React.FormEvent) => {
-    e.preventDefault();
-    setSavedToast(
-      activeMode === "yawaraka_pr"
-        ? "やわらかPR補足情報を保存しました！"
-        : "プレスリリースを正常に保存しました！"
-    );
-    setTimeout(() => {
-      router.push("/admin/press-releases");
-    }, 1200);
+  const handleSave = async () => {
+    try {
+      const payload: PressRelease = {
+        ...currentFormData,
+        timestamp: "たった今",
+      };
+
+      const response = await fetch("/api/press-releases", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        throw new Error("保存に失敗しました");
+      }
+
+      setSavedToast(
+        activeMode === "yawaraka_pr"
+          ? "やわらかPR補足情報を保存しました！"
+          : "プレスリリースを正常に保存しました！"
+      );
+      setTimeout(() => {
+        router.push("/admin/press-releases");
+      }, 1200);
+    } catch (error) {
+      console.error("Failed to save press release", error);
+      setSavedToast("保存に失敗しました。DB接続または設定を確認してください。");
+      setTimeout(() => setSavedToast(null), 2500);
+    }
   };
 
   // Extract table of contents headings
