@@ -69,10 +69,14 @@ export const PressReleaseModal: React.FC<PressReleaseModalProps> = ({
           {/* Release Header */}
           <div className="space-y-3">
             <div className="flex items-center justify-between text-xs text-gray-500">
-              <span className="flex items-center gap-1 font-semibold text-[#0066cc]">
+              <Link
+                className="flex items-center gap-1 font-semibold text-[#0066cc] hover:underline"
+                href={`/companies/${release.companyId}`}
+                onClick={onClose}
+              >
                 <Building2 className="w-4 h-4" />
                 {release.company}
-              </span>
+              </Link>
               <span className="flex items-center gap-1 text-gray-400">
                 <Calendar className="w-3.5 h-3.5" />
                 {release.publishedAt}
@@ -158,7 +162,13 @@ export const PressReleaseModal: React.FC<PressReleaseModalProps> = ({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-gray-700">
                 <div>
                   <span className="text-gray-400 block text-[10px]">企業・部署名</span>
-                  <span className="font-semibold">{release.company}</span>
+                  <Link
+                    className="font-semibold hover:text-[#0066cc]"
+                    href={`/companies/${release.companyId}`}
+                    onClick={onClose}
+                  >
+                    {release.company}
+                  </Link>
                   <span className="block text-gray-600">{release.contactInfo.department}</span>
                 </div>
                 <div className="space-y-1">

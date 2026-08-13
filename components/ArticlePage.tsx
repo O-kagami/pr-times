@@ -54,7 +54,7 @@ export const ArticlePage: React.FC<ArticlePageProps> = ({ release }) => {
 
   // Filter related releases
   const companyReleases = PRESS_RELEASES.filter(
-    (r) => r.company === release.company && r.id !== release.id
+    (r) => r.companyId === release.companyId && r.id !== release.id
   );
   const relatedReleases = PRESS_RELEASES.filter(
     (r) => r.category === release.category && r.id !== release.id

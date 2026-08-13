@@ -15,8 +15,7 @@ export const PressReleaseCard: React.FC<PressReleaseCardProps> = ({
   onClick,
 }) => {
   return (
-    <Link
-      href={`/companies/${release.companyId}/releases/${release.id}`}
+    <article
       onClick={onClick}
       className="group cursor-pointer bg-white p-3.5 rounded border border-gray-200 hover:border-sky-300 hover:shadow-md transition-all duration-200 flex flex-col sm:flex-row gap-3 justify-between items-start"
     >
@@ -35,9 +34,16 @@ export const PressReleaseCard: React.FC<PressReleaseCardProps> = ({
           </div>
 
           {/* Title */}
-          <h2 className="text-sm md:text-base font-bold text-gray-900 leading-snug group-hover:text-[#0066cc] transition-colors line-clamp-2">
-            {release.title}
-          </h2>
+          <Link
+            href={`/companies/${release.companyId}/releases/${release.id}`}
+            onClick={(event) => {
+              if (onClick) event.preventDefault();
+            }}
+          >
+            <h2 className="text-sm md:text-base font-bold text-gray-900 leading-snug group-hover:text-[#0066cc] transition-colors line-clamp-2">
+              {release.title}
+            </h2>
+          </Link>
 
           {/* Subtitle / Snippet */}
           {release.subtitle && (
@@ -49,10 +55,14 @@ export const PressReleaseCard: React.FC<PressReleaseCardProps> = ({
 
         {/* Footer Company Info */}
         <div className="mt-3 flex items-center justify-between text-xs text-gray-500 pt-2 border-t border-gray-100">
-          <span className="flex items-center gap-1 font-medium text-gray-700 truncate max-w-[240px]">
+          <Link
+            className="flex items-center gap-1 font-medium text-gray-700 hover:text-[#0066cc] truncate max-w-[240px]"
+            href={`/companies/${release.companyId}`}
+            onClick={(event) => event.stopPropagation()}
+          >
             <Building2 className="w-3.5 h-3.5 text-gray-400 shrink-0" />
             <span className="truncate">{release.company}</span>
-          </span>
+          </Link>
 
           <div className="flex items-center gap-1 text-[10px] text-gray-400 shrink-0">
             {release.keywords.slice(0, 2).map((kw) => (
@@ -65,14 +75,20 @@ export const PressReleaseCard: React.FC<PressReleaseCardProps> = ({
       </div>
 
       {/* Right Image Thumbnail */}
-      <div className="w-full sm:w-36 md:w-40 aspect-video sm:aspect-4/3 shrink-0 overflow-hidden rounded bg-gray-100 border border-gray-100">
+      <Link
+        className="w-full sm:w-36 md:w-40 aspect-video sm:aspect-4/3 shrink-0 overflow-hidden rounded bg-gray-100 border border-gray-100"
+        href={`/companies/${release.companyId}/releases/${release.id}`}
+        onClick={(event) => {
+          if (onClick) event.preventDefault();
+        }}
+      >
         <img
           src={release.imageUrl}
           alt={release.title}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           loading="lazy"
         />
-      </div>
-    </Link>
+      </Link>
+    </article>
   );
 };
