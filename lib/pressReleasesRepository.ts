@@ -23,6 +23,26 @@ export const listPressReleases = async (): Promise<PressRelease[]> => {
   return releases;
 };
 
+/** 管理画面で保存された内容を id で1件取得する */
+export const getPressReleaseById = async (
+  id: string
+): Promise<PressRelease | null> => {
+  await ensurePressReleasesTable();
+
+  const row = await db
+    .selectFrom("press_releases")
+    .select("payload")
+    .where("id", "=", id)
+    .executeTakeFirst();
+
+  const payload: unknown = row?.payload;
+  if (typeof payload === "object" && payload !== null && "id" in payload) {
+    return payload as PressRelease;
+  }
+
+  return null;
+};
+
 export const upsertPressRelease = async (release: PressRelease): Promise<PressRelease> => {
   await ensurePressReleasesTable();
 
