@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useCallback, useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
@@ -256,14 +256,19 @@ export default function PRForm({
    * 選択された文章と、その位置（本文プレビュー枠の左上からの相対座標）を覚える。
    * 座標は「コメントを追加」の吹き出しを選択箇所の真上に出すために使う。
    */
-  const handleDetectSelection = () => {
-    if (activeMode !== "yawaraka_pr") return;
-
+  const handleDetectSelection = useCallback(() => {
     const selection = window.getSelection();
     const text = selection?.toString().trim() ?? "";
     const container = articleRef.current;
 
-    if (!selection || selection.rangeCount === 0 || text.length < 2 || !container) {
+    if (
+      !selection ||
+      selection.rangeCount === 0 ||
+      text.length < 2 ||
+      !container ||
+      // 本文プレビューの外（入力欄など）の選択は拾わない
+      !container.contains(selection.anchorNode)
+    ) {
       setSelectedText("");
       setSelectionAnchor(null);
       return;
@@ -272,12 +277,23 @@ export default function PRForm({
     const rect = selection.getRangeAt(0).getBoundingClientRect();
     const box = container.getBoundingClientRect();
 
+    // 吹き出しの幅ぶんは枠内に残す。端の文字を選んでも見切れないように
+    const center = rect.left - box.left + rect.width / 2;
+    const edge = Math.min(80, box.width / 2);
+
     setSelectedText(text);
     setSelectionAnchor({
       top: rect.top - box.top,
-      left: rect.left - box.left + rect.width / 2,
+      left: Math.min(Math.max(center, edge), box.width - edge),
     });
-  };
+  }, []);
+
+  // モバイルの長押し選択やハンドル操作は mouseup が来ないので selectionchange で拾う
+  useEffect(() => {
+    if (activeMode !== "yawaraka_pr") return;
+    document.addEventListener("selectionchange", handleDetectSelection);
+    return () => document.removeEventListener("selectionchange", handleDetectSelection);
+  }, [activeMode, handleDetectSelection]);
 
   const handleHighlightSelectedText = () => {
     if (!selectedText) return;
@@ -328,6 +344,18 @@ export default function PRForm({
     }
     setEditingNote(null);
     setEditingNoteIndex(null);
+  };
+
+  const handleSaveDraft = () => {
+    const now = new Date();
+    setLastSavedTime(
+      `${now.getHours().toString().padStart(2, "0")}:${now
+        .getMinutes()
+        .toString()
+        .padStart(2, "0")} 手動保存`
+    );
+    setSavedToast("下書きを保存しました");
+    setTimeout(() => setSavedToast(null), 2500);
   };
 
   /**
@@ -449,32 +477,33 @@ export default function PRForm({
         </div>
       )}
 
-      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-gray-200 px-4 py-2.5 flex items-center justify-between shadow-xs">
-        <div className="flex items-center gap-3">
+      {/* 狭い画面ではモード切替だけ2段目に落として、他のボタンは潰さず並べる */}
+      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-gray-200 px-3 sm:px-4 py-2.5 flex flex-wrap items-center justify-between gap-y-2 shadow-xs">
+        <div className="flex items-center gap-3 shrink-0">
           <Link
             href={returnHref}
-            className="flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors px-2 py-1 rounded-md hover:bg-gray-100"
+            className="flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors px-2 py-1 rounded-md hover:bg-gray-100 whitespace-nowrap"
           >
-            <X className="w-4 h-4 text-gray-500" />
-            <span>閉じる</span>
+            <X className="w-4 h-4 text-gray-500 shrink-0" />
+            <span className="hidden sm:inline">閉じる</span>
           </Link>
-          <div className="h-4 w-px bg-gray-200" />
+          <div className="hidden sm:block h-4 w-px bg-gray-200" />
           <span className="text-xs text-gray-400 font-mono hidden sm:inline">
             {lastSavedTime}
           </span>
         </div>
 
-        <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-xl border border-gray-200/80 shadow-inner">
+        <div className="flex items-center gap-1 order-last lg:order-none bg-gray-100 p-1 rounded-xl border border-gray-200/80 shadow-inner w-full lg:w-auto">
           <button
             type="button"
             onClick={() => setActiveMode("press_release")}
-            className={`flex items-center gap-2 px-4 py-1.5 text-xs sm:text-sm font-bold rounded-lg transition-all cursor-pointer ${
+            className={`flex flex-1 lg:flex-none items-center justify-center gap-2 px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-bold rounded-lg whitespace-nowrap transition-all cursor-pointer ${
               activeMode === "press_release"
                 ? "bg-sky-600 text-white shadow-sm"
                 : "text-gray-600 hover:text-gray-900 hover:bg-gray-200/60"
             }`}
           >
-            <Building className="w-4 h-4" />
+            <Building className="w-4 h-4 shrink-0" />
             <span>プレスリリース</span>
           </button>
           <button
@@ -483,22 +512,23 @@ export default function PRForm({
               setActiveMode("yawaraka_pr");
               setSoftPrEnabled(true);
             }}
-            className={`flex items-center gap-2 px-4 py-1.5 text-xs sm:text-sm font-bold rounded-lg transition-all cursor-pointer ${
+            className={`flex flex-1 lg:flex-none items-center justify-center gap-2 px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-bold rounded-lg whitespace-nowrap transition-all cursor-pointer ${
               activeMode === "yawaraka_pr"
                 ? "bg-amber-500 text-white shadow-sm"
                 : "text-gray-600 hover:text-gray-900 hover:bg-amber-100/50"
             }`}
           >
-            <Heart className="w-4 h-4 fill-current text-white/90" />
+            <Heart className="w-4 h-4 fill-current text-white/90 shrink-0" />
             <span>やわらかPR</span>
           </button>
         </div>
 
-        <div className="flex items-center gap-3">
-          <span className="text-xs font-medium text-gray-500 hidden md:inline">
+        <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+          <span className="text-xs font-medium text-gray-500 hidden xl:inline">
             {totalCharCount} 文字
           </span>
-          <div className="relative">
+          {/* 狭い画面ではボタンを並べきれないので、⋯ の中にたたむ */}
+          <div className="relative lg:hidden">
             <button
               type="button"
               onClick={() => setOptionsMenuOpen(!optionsMenuOpen)}
@@ -506,7 +536,40 @@ export default function PRForm({
             >
               <MoreHorizontal className="w-5 h-5" />
             </button>
+
+            {optionsMenuOpen && (
+              <>
+                <div className="z-30 fixed inset-0" onClick={() => setOptionsMenuOpen(false)} />
+                <div className="right-0 z-40 absolute bg-white shadow-lg mt-2 py-1 border border-gray-200 rounded-xl w-52 animate-in fade-in slide-in-from-top-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setOptionsMenuOpen(false);
+                      handleSaveDraft();
+                    }}
+                    className="flex items-center gap-2 hover:bg-gray-50 px-3 py-2 w-full font-semibold text-gray-700 text-xs text-left transition-colors cursor-pointer"
+                  >
+                    <Clock className="w-4 h-4 text-gray-400" />
+                    下書き保存
+                  </button>
+                  {!isNew && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setOptionsMenuOpen(false);
+                        setClearSoftPrConfirmOpen(true);
+                      }}
+                      className="flex items-center gap-2 hover:bg-red-50 px-3 py-2 w-full font-semibold text-red-600 text-xs text-left transition-colors cursor-pointer"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      やわらかPRを全消去
+                    </button>
+                  )}
+                </div>
+              </>
+            )}
           </div>
+
           {/* 編集時だけ。新規作成では消す対象がまだないので出さない */}
           {!isNew && (
             <Button
@@ -514,7 +577,7 @@ export default function PRForm({
               variant="outline"
               size="sm"
               onClick={() => setClearSoftPrConfirmOpen(true)}
-              className="px-3 py-1.5 border-red-200 rounded-lg font-semibold text-red-600 text-xs hover:text-red-700 hover:bg-red-50"
+              className="hidden lg:inline-flex px-3 py-1.5 border-red-200 rounded-lg font-semibold text-red-600 text-xs whitespace-nowrap hover:text-red-700 hover:bg-red-50"
             >
               <Trash2 className="mr-1 w-3.5 h-3.5" />
               やわらかPRを全消去
@@ -524,38 +587,29 @@ export default function PRForm({
             type="button"
             variant="outline"
             size="sm"
-            onClick={() => {
-              const now = new Date();
-              setLastSavedTime(
-                `${now.getHours().toString().padStart(2, "0")}:${now
-                  .getMinutes()
-                  .toString()
-                  .padStart(2, "0")} 手動保存`
-              );
-              setSavedToast("下書きを保存しました");
-              setTimeout(() => setSavedToast(null), 2500);
-            }}
-            className="text-xs font-semibold px-3 py-1.5 rounded-lg border-gray-300 hover:bg-gray-100"
+            onClick={handleSaveDraft}
+            className="hidden lg:inline-flex text-xs font-semibold px-3 py-1.5 rounded-lg border-gray-300 whitespace-nowrap hover:bg-gray-100"
           >
             下書き保存
           </Button>
           <Button
             type="button"
             onClick={handleSave}
-            className={`text-xs sm:text-sm font-extrabold px-4 py-1.5 rounded-lg text-white transition-all shadow-sm ${
+            className={`text-xs sm:text-sm font-extrabold px-3 sm:px-4 py-1.5 rounded-lg text-white whitespace-nowrap transition-all shadow-sm ${
               activeMode === "yawaraka_pr"
                 ? "bg-amber-500 hover:bg-amber-600 shadow-amber-200"
                 : "bg-sky-600 hover:bg-sky-700 shadow-sky-200"
             }`}
           >
-            <Send className="w-3.5 h-3.5 mr-1" />
-            {isNew ? "公開に進む" : "更新を配信"}
+            <Send className="w-3.5 h-3.5 sm:mr-1" />
+            <span className="hidden sm:inline">{isNew ? "公開に進む" : "更新を配信"}</span>
           </Button>
         </div>
       </header>
 
       <div className="flex-1 flex overflow-hidden relative">
-        <aside className="w-14 bg-white border-r border-gray-200 flex flex-col items-center py-4 space-y-4 shrink-0 z-20">
+        {/* 目次やスコアは狭い画面では邪魔になるので、本文に幅を譲る */}
+        <aside className="hidden md:flex w-14 bg-white border-r border-gray-200 flex-col items-center py-4 space-y-4 shrink-0 z-20">
           <button
             type="button"
             onClick={() => setActiveSidePanel(activeSidePanel === "toc" ? null : "toc")}
@@ -600,7 +654,7 @@ export default function PRForm({
         </aside>
 
         {activeSidePanel && (
-          <aside className="w-72 bg-white border-r border-gray-200 p-4 space-y-4 shrink-0 overflow-y-auto z-10 animate-in fade-in slide-in-from-left-4">
+          <aside className="hidden md:block w-72 bg-white border-r border-gray-200 p-4 space-y-4 shrink-0 overflow-y-auto z-10 animate-in fade-in slide-in-from-left-4">
             <div className="flex items-center justify-between border-b pb-2">
               <h3 className="font-bold text-sm text-gray-800 flex items-center gap-2">
                 {activeSidePanel === "toc" && <List className="w-4 h-4 text-sky-600" />}
@@ -655,7 +709,7 @@ export default function PRForm({
           </aside>
         )}
 
-        <main className="flex-1 overflow-y-auto py-8 px-4 sm:px-8 flex justify-center bg-[#f9fafb]">
+        <main className="flex-1 min-w-0 overflow-y-auto py-6 sm:py-8 px-3 sm:px-8 flex justify-center bg-[#f9fafb]">
           <div className="w-full max-w-3xl space-y-6">
             {activeMode === "yawaraka_pr" && (
               <div className="bg-amber-50 border border-amber-200/90 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xs animate-in fade-in">
@@ -675,7 +729,7 @@ export default function PRForm({
               </div>
             )}
 
-            <div className="bg-white rounded-2xl border border-gray-200/80 shadow-sm p-6 sm:p-10 space-y-6 min-h-[700px] relative">
+            <div className="bg-white rounded-2xl border border-gray-200/80 shadow-sm p-4 sm:p-10 space-y-6 min-h-[700px] relative">
               <div className="relative group rounded-xl overflow-hidden bg-gray-50 border-2 border-dashed border-gray-200 hover:border-sky-300 transition-all">
                 {imageUrl ? (
                   <div className="relative">
@@ -758,7 +812,6 @@ export default function PRForm({
                     <div
                       className="yawaraka-article text-base text-gray-800 leading-relaxed whitespace-pre-line p-4 rounded-lg select-text"
                       onMouseUp={handleDetectSelection}
-                      onKeyUp={handleDetectSelection}
                     >
                       <AnnotatedContent
                         content={content}
