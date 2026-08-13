@@ -139,7 +139,7 @@ export const PRESS_RELEASES: PressRelease[] = [
     title: "【2026年最新調査】生成AI時代の業務効率化に関する全国意識調査を発表。業務利用率は前年比240%増加、導入企業満足度は88.4%に達する結果に",
     subtitle: "全国の会社員・経営者1,200名を対象に「職場におけるAI導入実態と生産性変化」に関する実態調査を実施",
     companyId: "brainsync",
-    company: "株式会社BrainSync",
+    company: "医療法人せせらぎ",
     category: "ビジネス",
     subCategory: "AI・調査レポート",
     timestamp: "10分前",

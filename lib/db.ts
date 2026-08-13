@@ -61,6 +61,28 @@ if (process.env.NODE_ENV !== "production") {
 }
 
 let schemaEnsured = false;
+let schemaEnsurePromise: Promise<void> | null = null;
+
+type PgErrorLike = {
+  code?: string;
+  constraint?: string;
+};
+
+const isConcurrentCreateTypeRace = (error: unknown) => {
+  const pgError = error as PgErrorLike;
+  return (
+    pgError?.code === "23505" &&
+    pgError?.constraint === "pg_type_typname_nsp_index"
+  );
+};
+
+const hasPressReleasesTable = async () => {
+  const result = await sql<{ regclass_name: string | null }>`
+    SELECT to_regclass('public.press_releases') AS regclass_name
+  `.execute(db);
+
+  return Boolean(result.rows[0]?.regclass_name);
+};
 
 export const logDbConnectionStatus = async (context: string) => {
   try {
@@ -83,18 +105,38 @@ export const ensurePressReleasesTable = async () => {
     return;
   }
 
-  await sql`
-    CREATE TABLE IF NOT EXISTS press_releases (
-      id TEXT PRIMARY KEY,
-      title TEXT NOT NULL,
-      company TEXT NOT NULL,
-      category TEXT NOT NULL,
-      published_at TEXT NOT NULL,
-      payload JSONB NOT NULL,
-      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-    )
-  `.execute(db);
+  if (!schemaEnsurePromise) {
+    schemaEnsurePromise = (async () => {
+      try {
+        await sql`
+          CREATE TABLE IF NOT EXISTS press_releases (
+            id TEXT PRIMARY KEY,
+            title TEXT NOT NULL,
+            company TEXT NOT NULL,
+            category TEXT NOT NULL,
+            published_at TEXT NOT NULL,
+            payload JSONB NOT NULL,
+            created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+          )
+        `.execute(db);
 
-  schemaEnsured = true;
+        schemaEnsured = true;
+      } catch (error) {
+        if (isConcurrentCreateTypeRace(error) && (await hasPressReleasesTable())) {
+          console.warn(
+            "[DB] Ignored concurrent table creation race for press_releases"
+          );
+          schemaEnsured = true;
+          return;
+        }
+
+        throw error;
+      } finally {
+        schemaEnsurePromise = null;
+      }
+    })();
+  }
+
+  await schemaEnsurePromise;
 };
