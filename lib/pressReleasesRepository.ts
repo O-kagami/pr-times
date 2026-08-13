@@ -1,4 +1,4 @@
-import { ensurePressReleasesTable, db } from "@/lib/db";
+import { ensurePressReleasesTable, db, type JsonValue } from "@/lib/db";
 import type { PressRelease } from "@/data/pressReleases";
 
 const isPressReleaseArray = (value: unknown): value is PressRelease[] => {
@@ -14,9 +14,11 @@ export const listPressReleases = async (): Promise<PressRelease[]> => {
     .orderBy("updated_at", "desc")
     .execute();
 
-  const releases = rows.map((row) => row.payload).filter((row): row is PressRelease => {
-    return typeof row === "object" && row !== null && "id" in row && "title" in row;
-  });
+  const releases = rows
+    .map((row): unknown => row.payload)
+    .filter((row): row is PressRelease => {
+      return typeof row === "object" && row !== null && "id" in row && "title" in row;
+    });
 
   return releases;
 };
@@ -32,7 +34,8 @@ export const upsertPressRelease = async (release: PressRelease): Promise<PressRe
       company: release.company,
       category: release.category,
       published_at: release.publishedAt,
-      payload: release,
+      payload: release as unknown as JsonValue,
+      created_at: new Date(),
       updated_at: new Date(),
     })
     .onConflict((oc) =>
@@ -41,7 +44,7 @@ export const upsertPressRelease = async (release: PressRelease): Promise<PressRe
         company: release.company,
         category: release.category,
         published_at: release.publishedAt,
-        payload: release,
+        payload: release as unknown as JsonValue,
         updated_at: new Date(),
       })
     )
