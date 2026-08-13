@@ -83,6 +83,13 @@ export function AnnotatedContent({ content, notes, softNotes, compact = false }:
             }`}
           >
             <span className="absolute -top-[7px] left-1/2 h-3 w-3 -translate-x-1/2 rotate-45 border-t border-l border-[#e2d2b6] bg-[#fbf6ee]" />
+            {note.imageUrl && (
+              <img
+                src={note.imageUrl}
+                alt=""
+                className="mb-3 h-28 w-full rounded-sm object-cover"
+              />
+            )}
             <span className="mb-2 block text-[11px] font-bold tracking-wide text-[#a8703a]">
               広報担当より
             </span>
