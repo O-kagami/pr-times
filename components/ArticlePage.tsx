@@ -487,7 +487,7 @@ export const ArticlePage: React.FC<ArticlePageProps> = ({ release }) => {
                   {companyReleases.map((rel) => (
                     <Link
                       key={rel.id}
-                      href={`/press/${rel.id}`}
+                      href={`/companies/${rel.companyId}/releases/${rel.id}`}
                       className="block group space-y-1 pb-2 border-b border-gray-100 last:border-b-0"
                     >
                       <h4 className="text-xs font-bold text-gray-800 group-hover:text-[#0066cc] line-clamp-2 leading-snug">
@@ -510,7 +510,7 @@ export const ArticlePage: React.FC<ArticlePageProps> = ({ release }) => {
                   {relatedReleases.slice(0, 3).map((rel) => (
                     <Link
                       key={rel.id}
-                      href={`/press/${rel.id}`}
+                      href={`/companies/${rel.companyId}/releases/${rel.id}`}
                       className="flex items-start gap-2 group pb-2 border-b border-gray-100 last:border-b-0"
                     >
                       <img

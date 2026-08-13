@@ -26,6 +26,7 @@ export interface PressRelease {
   id: string;
   title: string;
   subtitle?: string;
+  companyId: string;
   company: string;
   companyLogo?: string;
   category: string;
@@ -121,6 +122,7 @@ export const PRESS_RELEASES: PressRelease[] = [
     id: "pr-1",
     title: "【2026年最新調査】生成AI時代の業務効率化に関する全国意識調査を発表。業務利用率は前年比240%増加、導入企業満足度は88.4%に達する結果に",
     subtitle: "全国の会社員・経営者1,200名を対象に「職場におけるAI導入実態と生産性変化」に関する実態調査を実施",
+    companyId: "brainsync",
     company: "株式会社BrainSync",
     category: "ビジネス",
     subCategory: "AI・調査レポート",
@@ -215,6 +217,7 @@ export const PRESS_RELEASES: PressRelease[] = [
     id: "pr-2",
     title: "『プロジェクトセカイ カラフルステージ！ feat. 初音ミク』大型アップデート記念イベント開催決定！限定ガチャや新楽曲を追加",
     subtitle: "全世界でユーザー数3000万人を突破したリズム＆アドベンチャーゲーム",
+    companyId: "sega-craftegg",
     company: "株式会社セガ / 株式会社Craft Egg",
     category: "エンタメ",
     subCategory: "ゲーム・アプリ",
@@ -278,6 +281,7 @@ export const PRESS_RELEASES: PressRelease[] = [
     id: "pr-3",
     title: "昭和レトロなカセットデッキデザインのBluetoothオーディオシステムが新登場。エモーショナルな音質と可動ギミックを完全再現",
     subtitle: "懐かしのアナログ操作感と最新ハイレゾ音源テクノロジーの融合",
+    companyId: "orion-denki",
     company: "株式会社オリオン電機",
     category: "テクノロジー",
     subCategory: "家電・AV機器",

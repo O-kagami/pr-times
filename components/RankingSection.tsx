@@ -83,7 +83,7 @@ export const RankingSection: React.FC<RankingSectionProps> = ({
             return (
               <Link
                 key={release.id}
-                href={`/press/${release.id}`}
+                href={`/companies/${release.companyId}/releases/${release.id}`}
                 className="group cursor-pointer bg-white rounded border border-gray-200 shadow-xs hover:shadow-md transition-all flex flex-col overflow-hidden relative"
               >
                 {/* Rank Badge */}

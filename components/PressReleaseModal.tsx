@@ -47,7 +47,7 @@ export const PressReleaseModal: React.FC<PressReleaseModalProps> = ({
 
           <div className="flex items-center gap-3">
             <Link
-              href={`/press/${release.id}`}
+              href={`/companies/${release.companyId}/releases/${release.id}`}
               onClick={onClose}
               className="flex items-center gap-1 text-xs text-sky-300 hover:text-white font-medium bg-white/10 px-2.5 py-1 rounded transition-colors"
             >
@@ -190,7 +190,7 @@ export const PressReleaseModal: React.FC<PressReleaseModalProps> = ({
           <div className="flex items-center justify-between pt-4 border-t border-gray-100">
             <div className="flex items-center gap-2">
               <Link
-                href={`/press/${release.id}`}
+                href={`/companies/${release.companyId}/releases/${release.id}`}
                 onClick={onClose}
                 className="flex items-center gap-1 px-3 py-1.5 bg-[#0066cc] hover:bg-[#0055b8] text-white rounded text-xs font-bold transition-colors"
               >
