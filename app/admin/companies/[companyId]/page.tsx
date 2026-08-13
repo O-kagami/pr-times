@@ -54,13 +54,19 @@ export default async function CompanyAdminDashboard({
   const now = new Date();
   const milestones = computeMilestones(company.releases, now);
   const excludeCompanyId = /^\d+$/.test(companyId) ? Number(companyId) : null;
+  const peerSince = new Date(now.getTime() - PEER_WINDOW_DAYS * DAY_MS);
+  const targetReleases = company.releases.filter(
+    (release) => release.publishedAt >= peerSince
+  );
 
   const { scope, peers } = await listPeerCompanies({
     industryId: company.industryId,
     prefecture: company.prefecture,
     excludeCompanyId,
-    since: new Date(now.getTime() - PEER_WINDOW_DAYS * DAY_MS),
+    since: peerSince,
     limit: 8,
+    targetKeywords: targetReleases.flatMap((release) => release.keywords),
+    targetReleaseCount: targetReleases.length,
   });
 
   // カレンダーは似た企業カードと同じ範囲（県内 or 全国）に合わせる
@@ -70,6 +76,7 @@ export default async function CompanyAdminDashboard({
     excludeCompanyId,
     since: new Date(now.getTime() - CALENDAR_WINDOW_DAYS * DAY_MS),
     limit: 80,
+    companyIds: peers.map((peer) => peer.companyId),
   });
 
   const calendarEntries: CalendarEntry[] = peerReleases.map((release) => ({
