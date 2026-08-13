@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { Search, Mail, User, Menu, X } from "lucide-react";
+import Link from "next/link";
 
 interface HeaderProps {
   searchQuery: string;
@@ -20,11 +21,11 @@ export const Header: React.FC<HeaderProps> = ({ searchQuery, onSearchChange }) =
       <div className="flex justify-between items-center gap-4 mx-auto px-4 py-2.5 max-w-[1200px]">
         {/* Logo and Tagline */}
         <div className="flex items-center gap-3 shrink-0">
-          <a href="#" className="group flex items-center gap-2">
+          <Link href="/" className="group flex items-center gap-2">
             <span className="font-extrabold text-white group-hover:text-sky-300 text-2xl md:text-3xl tracking-tighter transition-colors">
               PR<span className="font-light text-sky-400">TIMES</span>
             </span>
-          </a>
+          </Link>
           <span className="hidden md:inline-block pl-3 border-gray-600 border-l text-[11px] text-gray-300 leading-tight">
             プレスリリース・ニュースリリース配信サービス
           </span>
