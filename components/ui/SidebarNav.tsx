@@ -10,7 +10,7 @@ export default function SidebarNav({ items }: { items: Item[] }) {
       <ul className="flex flex-col gap-1">
         {items.map((it) => (
           <li key={it.href}>
-            <Link href={it.href} className="block px-3 py-2 text-sm rounded hover:bg-gray-100">
+            <Link href={it.href} className="block hover:bg-gray-100 px-3 py-2 rounded text-sm">
               {it.title}
             </Link>
           </li>
