@@ -81,8 +81,9 @@ export const RankingSection: React.FC<RankingSectionProps> = ({
           {topSix.map((release, index) => {
             const rank = index + 1;
             return (
-              <article
+              <Link
                 key={release.id}
+                href={`/companies/${release.companyId}/releases/${release.id}`}
                 className="group cursor-pointer bg-white rounded border border-gray-200 shadow-xs hover:shadow-md transition-all flex flex-col overflow-hidden relative"
               >
                 {/* Rank Badge */}
@@ -101,33 +102,26 @@ export const RankingSection: React.FC<RankingSectionProps> = ({
                 </div>
 
                 {/* Thumbnail Image */}
-                <Link
-                  className="relative aspect-video w-full overflow-hidden bg-gray-100"
-                  href={`/companies/${release.companyId}/releases/${release.id}`}
-                >
+                <div className="relative aspect-video w-full overflow-hidden bg-gray-100">
                   <img
                     src={release.imageUrl}
                     alt={release.title}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     loading="lazy"
                   />
-                </Link>
+                </div>
 
                 {/* Content */}
                 <div className="p-2 flex flex-col flex-1 justify-between">
-                  <Link href={`/companies/${release.companyId}/releases/${release.id}`}>
-                    <h3 className="text-xs font-bold text-gray-800 line-clamp-2 leading-snug group-hover:text-[#0066cc] transition-colors">
-                      {release.title}
-                    </h3>
-                  </Link>
+                  <h3 className="text-xs font-bold text-gray-800 line-clamp-2 leading-snug group-hover:text-[#0066cc] transition-colors">
+                    {release.title}
+                  </h3>
                   <div className="mt-2 pt-1.5 border-t border-gray-100 flex flex-col gap-0.5 text-[10px] text-gray-500">
-                    <Link className="truncate hover:text-[#0066cc]" href={`/companies/${release.companyId}`}>
-                      {release.company}
-                    </Link>
+                    <span className="truncate">{release.company}</span>
                     <span className="text-gray-400">{release.timestamp}</span>
                   </div>
                 </div>
-              </article>
+              </Link>
             );
           })}
         </div>

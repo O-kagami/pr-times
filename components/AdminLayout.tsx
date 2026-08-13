@@ -1,8 +1,9 @@
-import type { ReactNode } from "react";
+"use client";
+import React from "react";
 import AdminSidebar from "./AdminSidebar";
 import styles from "./admin.module.css";
 
-type Props = { children: ReactNode };
+type Props = { children: React.ReactNode };
 
 export default function AdminLayout({ children }: Props) {
   return (
