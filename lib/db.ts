@@ -14,8 +14,72 @@ export interface PressReleasesTable {
   updated_at: Date;
 }
 
+/**
+ * 以下は RDS に元々入っている PR TIMES のデータセット。
+ * アプリ側で CREATE することはないので ensure*Table は用意しない（読み取り専用）。
+ */
+export interface CompanyTable {
+  company_id: number;
+  company_name: string;
+  president_name: string;
+  address: string;
+  phone: string;
+  description: string;
+  industry_id: number;
+  ipo_type_id: number;
+  capital: number;
+  foundation_date: string;
+  url: string;
+  twitter_screen_name: string;
+}
+
+export interface ReleaseTable {
+  company_id: number;
+  release_id: number;
+  title: string;
+  subtitle: string | null;
+  lead_paragraph: string | null;
+  body: string | null;
+  main_image: string | null;
+  main_image_fastly: string | null;
+  youtube_url: string | null;
+  release_type_id: number;
+  created_at: Date;
+}
+
+export interface ReleaseKeywordTable {
+  company_id: number;
+  release_id: number;
+  keyword_id: number;
+  sort_priority: number;
+}
+
+export interface KeywordTable {
+  keyword_id: number;
+  keyword_name: string;
+}
+
+export interface ReleaseStatisticTable {
+  company_id: number;
+  release_id: number;
+  page_view: number;
+  unique_user: number;
+  like_count: number;
+}
+
+export interface IndustryTable {
+  industry_id: number;
+  industry_name: string;
+}
+
 export interface Database {
   press_releases: PressReleasesTable;
+  company: CompanyTable;
+  release: ReleaseTable;
+  release_keyword: ReleaseKeywordTable;
+  keyword: KeywordTable;
+  release_statistic: ReleaseStatisticTable;
+  industry: IndustryTable;
 }
 
 const buildConnectionString = () => {
