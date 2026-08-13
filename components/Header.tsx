@@ -16,26 +16,26 @@ export const Header: React.FC<HeaderProps> = ({ searchQuery, onSearchChange }) =
   };
 
   return (
-    <header className="w-full bg-[#182b45] text-white shadow-md sticky top-0 z-40">
-      <div className="max-w-[1200px] mx-auto px-4 py-2.5 flex items-center justify-between gap-4">
+    <header className="top-0 z-40 sticky bg-[#182b45] shadow-md w-full text-white">
+      <div className="flex justify-between items-center gap-4 mx-auto px-4 py-2.5 max-w-[1200px]">
         {/* Logo and Tagline */}
         <div className="flex items-center gap-3 shrink-0">
-          <a href="#" className="flex items-center gap-2 group">
-            <span className="font-extrabold tracking-tighter text-2xl md:text-3xl text-white group-hover:text-sky-300 transition-colors">
+          <a href="#" className="group flex items-center gap-2">
+            <span className="font-extrabold text-white group-hover:text-sky-300 text-2xl md:text-3xl tracking-tighter transition-colors">
               PR<span className="font-light text-sky-400">TIMES</span>
             </span>
           </a>
-          <span className="hidden md:inline-block text-[11px] text-gray-300 border-l border-gray-600 pl-3 leading-tight">
+          <span className="hidden md:inline-block pl-3 border-gray-600 border-l text-[11px] text-gray-300 leading-tight">
             プレスリリース・ニュースリリース配信サービス
           </span>
         </div>
 
         {/* Right Controls: Desktop */}
-        <div className="hidden lg:flex items-center gap-3 flex-1 justify-end">
+        <div className="hidden lg:flex flex-1 justify-end items-center gap-3">
           {/* Action buttons */}
           <a
             href="#"
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-[#243d61] hover:bg-[#2e4d7a] rounded text-gray-100 transition-colors border border-[#395682]"
+            className="flex items-center gap-1.5 bg-[#243d61] hover:bg-[#2e4d7a] px-3 py-1.5 border border-[#395682] rounded font-medium text-gray-100 text-xs transition-colors"
           >
             <Mail className="w-3.5 h-3.5 text-sky-300" />
             <span>プレスリリースを受信</span>
@@ -43,10 +43,17 @@ export const Header: React.FC<HeaderProps> = ({ searchQuery, onSearchChange }) =
 
           <a
             href="#"
-            className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium bg-[#243d61] hover:bg-[#2e4d7a] rounded text-gray-100 transition-colors border border-[#395682]"
+            className="flex items-center gap-1 bg-[#243d61] hover:bg-[#2e4d7a] px-3 py-1.5 border border-[#395682] rounded font-medium text-gray-100 text-xs transition-colors"
           >
             <User className="w-3.5 h-3.5 text-gray-300" />
             <span>ログイン</span>
+          </a>
+
+          <a
+            href="/admin"
+            className="flex items-center gap-1 bg-[#ffd24d] hover:bg-[#ffcf3b] px-3 py-1.5 border border-[#e0b93b] rounded font-medium text-[#1b1b1b] text-xs transition-colors"
+          >
+            <span>管理画面</span>
           </a>
 
           {/* Search form */}
@@ -56,11 +63,11 @@ export const Header: React.FC<HeaderProps> = ({ searchQuery, onSearchChange }) =
               placeholder="キーワードで検索"
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
-              className="w-full pl-3 pr-9 py-1.5 text-xs text-gray-900 bg-white rounded focus:outline-none focus:ring-2 focus:ring-sky-400 placeholder-gray-400"
+              className="bg-white py-1.5 pr-9 pl-3 rounded focus:outline-none focus:ring-2 focus:ring-sky-400 w-full text-gray-900 text-xs placeholder-gray-400"
             />
             <button
               type="submit"
-              className="absolute right-0 top-0 bottom-0 px-2.5 bg-[#0066cc] hover:bg-[#0055b8] text-white rounded-r flex items-center justify-center transition-colors"
+              className="top-0 right-0 bottom-0 absolute flex justify-center items-center bg-[#0066cc] hover:bg-[#0055b8] px-2.5 rounded-r text-white transition-colors"
               title="検索"
             >
               <Search className="w-3.5 h-3.5" />
@@ -69,16 +76,16 @@ export const Header: React.FC<HeaderProps> = ({ searchQuery, onSearchChange }) =
         </div>
 
         {/* Mobile search & menu toggle */}
-        <div className="flex lg:hidden items-center gap-2 flex-1 justify-end">
-          <div className="relative flex items-center flex-1 max-w-[200px]">
+        <div className="lg:hidden flex flex-1 justify-end items-center gap-2">
+          <div className="relative flex flex-1 items-center max-w-[200px]">
             <input
               type="text"
               placeholder="検索"
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
-              className="w-full pl-2 pr-7 py-1 text-xs text-gray-900 bg-white rounded focus:outline-none placeholder-gray-400"
+              className="bg-white py-1 pr-7 pl-2 rounded focus:outline-none w-full text-gray-900 text-xs placeholder-gray-400"
             />
-            <Search className="w-3.5 h-3.5 text-gray-500 absolute right-2 pointer-events-none" />
+            <Search className="right-2 absolute w-3.5 h-3.5 text-gray-500 pointer-events-none" />
           </div>
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -91,26 +98,32 @@ export const Header: React.FC<HeaderProps> = ({ searchQuery, onSearchChange }) =
 
       {/* Mobile Drawer Menu */}
       {mobileMenuOpen && (
-        <div className="lg:hidden bg-[#122238] border-t border-[#243d61] px-4 py-3 space-y-2">
+        <div className="lg:hidden space-y-2 bg-[#122238] px-4 py-3 border-[#243d61] border-t">
           <a
             href="#"
-            className="flex items-center gap-2 py-2 text-sm text-gray-200 hover:text-white border-b border-gray-700/50"
+            className="flex items-center gap-2 py-2 border-gray-700/50 border-b text-gray-200 hover:text-white text-sm"
           >
             <Mail className="w-4 h-4 text-sky-400" />
             プレスリリースを受信
           </a>
           <a
             href="#"
-            className="flex items-center gap-2 py-2 text-sm text-gray-200 hover:text-white border-b border-gray-700/50"
+            className="flex items-center gap-2 py-2 border-gray-700/50 border-b text-gray-200 hover:text-white text-sm"
           >
             <User className="w-4 h-4 text-gray-400" />
             ログイン
           </a>
           <a
             href="#"
-            className="block py-2 text-sm text-sky-300 font-medium"
+            className="block py-2 font-medium text-sky-300 text-sm"
           >
             企業様ログイン・配信申し込み
+          </a>
+          <a
+            href="/admin"
+            className="block py-2 font-medium text-yellow-300 text-sm"
+          >
+            管理画面
           </a>
         </div>
       )}
