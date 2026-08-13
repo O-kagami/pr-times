@@ -8,7 +8,7 @@ import {
   ChevronLeft,
   HeartPulse,
   RotateCcw,
-  ArrowRightLeft
+  RefreshCw,
 } from "lucide-react";
 import Link from "next/link";
 import {
@@ -44,6 +44,9 @@ const FLING_PROJECTION = 0.28;
 /** Resistance applied while dragging past the first or last card */
 const EDGE_RESISTANCE = 0.3;
 
+/** Gap between neighbouring cards when the whole set turns over at once, in ms */
+const FLIP_STAGGER = 55;
+
 const clamp = (value: number, min: number, max: number) =>
   Math.min(max, Math.max(min, value));
 
@@ -52,6 +55,95 @@ const clamp = (value: number, min: number, max: number) =>
  * Chronological position: 0 = oldest (far left), LAST_INDEX = newest (far right).
  */
 const toChrono = (index: number) => LAST_INDEX - index;
+
+/**
+ * Both faces of one card. The front is the press release as it was published;
+ * the back is what the PR person wrote underneath it, laid out like the back of a photo.
+ * Nothing on the front announces the back — turning the cards over is the surprise.
+ * `compact` is the deck's tighter scale — the grid uses the roomier default.
+ */
+function CardFaces({
+  item,
+  flipped,
+  compact = false,
+  delayMs = 0,
+}: {
+  item: SeseragiHistoryItem;
+  flipped: boolean;
+  compact?: boolean;
+  /** Staggered per card, so the set ripples instead of turning as one block */
+  delayMs?: number;
+}) {
+  const voice = item.voice;
+  const scale = compact ? styles.faceCompact : "";
+
+  return (
+    <div
+      className={`${styles.flipInner} ${flipped ? styles.flipInnerFlipped : ""}`}
+      style={delayMs ? { transitionDelay: `${delayMs}ms` } : undefined}
+    >
+      <div className={`${styles.face} ${scale}`} inert={flipped || undefined}>
+        <div
+          className={styles.cardImage}
+          style={{ backgroundImage: `url("${item.imageUrl}")` }}
+        >
+          <span className={styles.category}>{item.category}</span>
+          <span className={styles.elapsed}>{item.elapsed}</span>
+        </div>
+
+        <div className={styles.cardBody}>
+          <time className={styles.date}>
+            <CalendarDays aria-hidden="true" size={14} />
+            {item.publishedAt}
+          </time>
+          <h3>{item.title}</h3>
+          <p className={styles.summary}>{item.summary}</p>
+          <div className={styles.keywords}>
+            {item.keywords.map((keyword) => (
+              <span key={keyword}>#{keyword}</span>
+            ))}
+          </div>
+          {item.href && (
+            <Link className={`${styles.detailLink} pressable`} href={item.href} draggable={false}>
+              この発信を詳しく見る
+              <ArrowUpRight aria-hidden="true" size={15} />
+            </Link>
+          )}
+        </div>
+      </div>
+
+      {voice && (
+        <div
+          className={`${styles.face} ${styles.faceBack} ${scale}`}
+          inert={flipped ? undefined : true}
+        >
+          <div className={styles.backHeader}>
+            <span
+              aria-hidden="true"
+              className={styles.backStamp}
+              style={{ backgroundImage: `url("${item.imageUrl}")` }}
+            />
+            <div>
+              <span className={styles.backEyebrow}>広報担当より</span>
+              <span className={styles.backDate}>{item.publishedAt}／{item.category}</span>
+            </div>
+          </div>
+
+          <div className={styles.backMessage}>
+            {voice.body.map((paragraph, index) => (
+              <p key={index}>{paragraph}</p>
+            ))}
+          </div>
+
+          <div className={styles.backSignature}>
+            <div className={styles.backAuthor}>{voice.author}</div>
+            <div className={styles.backRole}>{voice.role}</div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 /**
  * One card in the deck. Its whole appearance is derived from the shared position value,
@@ -63,12 +155,16 @@ function HistoryCard({
   position,
   spacing,
   isActive,
+  flipped,
+  delayMs,
 }: {
   item: SeseragiHistoryItem;
   chrono: number;
   position: MotionValue<number>;
   spacing: MotionValue<number>;
   isActive: boolean;
+  flipped: boolean;
+  delayMs: number;
 }) {
   // Signed distance from the active card: negative = older (left), positive = newer (right)
   const offset = useTransform(position, (p) =>
@@ -89,62 +185,7 @@ function HistoryCard({
       }`}
       style={{ x, y, rotate, scale, opacity, zIndex }}
     >
-      <div
-        className={styles.cardImage}
-        style={{
-          backgroundImage: `url("${item.imageUrl}")`,
-          height: "260px",
-        }}
-      >
-        <span className={styles.category}>{item.category}</span>
-        <span className={styles.elapsed}>{item.elapsed}</span>
-      </div>
-      <div className={styles.cardBody} style={{ padding: "20px" }}>
-        <time className={styles.date}>
-          <CalendarDays aria-hidden="true" size={14} />
-          {item.publishedAt}
-        </time>
-        <h3
-          style={{
-            fontSize: "16px",
-            marginTop: "10px",
-            lineHeight: "1.5",
-            fontWeight: 800,
-          }}
-        >
-          {item.title}
-        </h3>
-        <p
-          className={styles.summary}
-          style={{
-            fontSize: "12px",
-            marginTop: "8px",
-            display: "-webkit-box",
-            WebkitLineClamp: 3,
-            WebkitBoxOrient: "vertical",
-            overflow: "hidden",
-            lineHeight: "1.8",
-          }}
-        >
-          {item.summary}
-        </p>
-        <div className={styles.keywords} style={{ paddingTop: "12px" }}>
-          {item.keywords.map((keyword) => (
-            <span key={keyword}>#{keyword}</span>
-          ))}
-        </div>
-        {item.href && (
-          <Link
-            className={`${styles.detailLink} pressable`}
-            href={item.href}
-            style={{ marginTop: "12px", paddingTop: "10px" }}
-            draggable={false}
-          >
-            この発信を詳しく見る
-            <ArrowUpRight aria-hidden="true" size={15} />
-          </Link>
-        )}
-      </div>
+      <CardFaces item={item} flipped={flipped} compact delayMs={delayMs} />
     </motion.div>
   );
 }
@@ -153,6 +194,11 @@ export default function SeseragiHistoryPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"swipe" | "grid">("swipe");
   const [currentIndex, setCurrentIndex] = useState(0);
+
+  /** Which side every card is showing. One switch turns the whole set over. */
+  const [flipped, setFlipped] = useState(false);
+
+  const flipDelay = (index: number) => Math.min(index, 5) * FLIP_STAGGER;
 
   /** Fractional chronological position of the deck. Everything visual is derived from this. */
   const position = useMotionValue(toChrono(0));
@@ -261,8 +307,7 @@ export default function SeseragiHistoryPage() {
               <h2 id="history-heading">これまでの発信</h2>
             </div>
             <p>
-              新しい診療拠点、親子向けイベント、日々の安心につながる情報を
-              インタラクティブなタイムラインまたは一覧でご覧いただけます。
+              新しい診療拠点、親子向けイベント、日々の安心につながる情報を振り返ります。
             </p>
           </header>
 
@@ -278,6 +323,16 @@ export default function SeseragiHistoryPage() {
               className={`${styles.modeTab} ${viewMode === "grid" ? styles.modeTabActive : ""}`}
             >
               グリッド一覧
+            </button>
+            <button
+              onClick={() => setFlipped((previous) => !previous)}
+              aria-pressed={flipped}
+              className={`${styles.modeTab} ${styles.flipTab} ${
+                flipped ? styles.flipTabActive : ""
+              }`}
+            >
+              <RefreshCw aria-hidden="true" size={14} />
+              カードを裏返す
             </button>
           </div>
 
@@ -354,6 +409,8 @@ export default function SeseragiHistoryPage() {
                     position={position}
                     spacing={spacing}
                     isActive={index === currentIndex}
+                    flipped={flipped}
+                    delayMs={flipDelay(Math.abs(index - currentIndex))}
                   />
                 ))}
               </motion.div>
@@ -386,42 +443,12 @@ export default function SeseragiHistoryPage() {
                 </button>
               </div>
 
-              <div className={styles.swipeInstructions}>
-                <span>
-                  <ArrowRightLeft size={14} /> スライダー操作または左右スワイプで歴史を遡れます
-                </span>
-              </div>
             </div>
           ) : (
             <div className={styles.grid}>
-              {SESERAGI_HISTORY.map((item) => (
+              {SESERAGI_HISTORY.map((item, index) => (
                 <article className={styles.card} key={item.id}>
-                  <div
-                    className={styles.cardImage}
-                    style={{ backgroundImage: `url("${item.imageUrl}")` }}
-                  >
-                    <span className={styles.category}>{item.category}</span>
-                    <span className={styles.elapsed}>{item.elapsed}</span>
-                  </div>
-                  <div className={styles.cardBody}>
-                    <time className={styles.date}>
-                      <CalendarDays aria-hidden="true" size={14} />
-                      {item.publishedAt}
-                    </time>
-                    <h3>{item.title}</h3>
-                    <p className={styles.summary}>{item.summary}</p>
-                    <div className={styles.keywords}>
-                      {item.keywords.map((keyword) => (
-                        <span key={keyword}>#{keyword}</span>
-                      ))}
-                    </div>
-                    {item.href && (
-                      <Link className={styles.detailLink} href={item.href}>
-                        この発信を詳しく見る
-                        <ArrowUpRight aria-hidden="true" size={16} />
-                      </Link>
-                    )}
-                  </div>
+                  <CardFaces item={item} flipped={flipped} delayMs={flipDelay(index)} />
                 </article>
               ))}
             </div>
