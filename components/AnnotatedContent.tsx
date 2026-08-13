@@ -9,13 +9,20 @@ interface AnnotatedContentProps {
   notes?: InlineNote[];
   softNotes?: SoftPrNote[];
   compact?: boolean;
+  onSelectSoftNote?: (note: SoftPrNote) => void;
 }
 
 type Mark =
   | { kind: "fact"; anchor: string; note: InlineNote }
   | { kind: "soft"; anchor: string; note: SoftPrNote };
 
-export function AnnotatedContent({ content, notes, softNotes, compact = false }: AnnotatedContentProps) {
+export function AnnotatedContent({
+  content,
+  notes,
+  softNotes,
+  compact = false,
+  onSelectSoftNote,
+}: AnnotatedContentProps) {
   const [activeMark, setActiveMark] = useState<string | null>(null);
 
   const marks: Mark[] = [
@@ -23,7 +30,7 @@ export function AnnotatedContent({ content, notes, softNotes, compact = false }:
     ...(softNotes || []).map((note): Mark => ({ kind: "soft", anchor: note.anchor, note })),
   ];
 
-  if (!marks.length) return content;
+  if (!marks.length) return <>{content}</>;
 
   const parts: ReactNode[] = [];
   let cursor = 0;
@@ -72,29 +79,40 @@ export function AnnotatedContent({ content, notes, softNotes, compact = false }:
       parts.push(
         <span
           key={key}
-          className="relative inline cursor-help bg-[linear-gradient(transparent_62%,#f7e3b4_62%)] pb-px"
+          className="relative inline cursor-pointer bg-[linear-gradient(transparent_62%,#f7e3b4_62%)] pb-px group"
           onMouseEnter={() => setActiveMark(key)}
           onMouseLeave={() => setActiveMark(null)}
+          onClick={(e) => {
+            if (onSelectSoftNote) {
+              e.stopPropagation();
+              onSelectSoftNote(note);
+            }
+          }}
         >
           {mark.anchor}
           <span
-            className={`absolute left-1/2 top-[calc(100%+12px)] z-20 w-80 max-w-[85vw] -translate-x-1/2 border border-[#e2d2b6] bg-[#fbf6ee] px-5 py-4 text-left shadow-lg cursor-default ${
-              activeMark === key ? "block" : "hidden"
+            className={`absolute left-1/2 top-[calc(100%+12px)] z-30 w-80 max-w-[85vw] -translate-x-1/2 border border-[#e2d2b6] bg-[#fbf6ee] px-5 py-4 text-left shadow-xl cursor-default rounded-md transition-all ${
+              activeMark === key ? "block animate-in fade-in" : "hidden"
             }`}
           >
             <span className="absolute -top-[7px] left-1/2 h-3 w-3 -translate-x-1/2 rotate-45 border-t border-l border-[#e2d2b6] bg-[#fbf6ee]" />
             {note.imageUrl && (
               <img
                 src={note.imageUrl}
-                alt=""
-                className="mb-3 h-28 w-full rounded-sm object-cover"
+                alt="広報補足画像"
+                className="mb-3 h-28 w-full rounded-sm object-cover border border-[#e2d2b6]"
               />
             )}
-            <span className="mb-2 block text-[11px] font-bold tracking-wide text-[#a8703a]">
-              広報担当より
+            <span className="mb-2 flex items-center justify-between text-[11px] font-bold tracking-wide text-[#a8703a]">
+              <span>広報担当より</span>
+              {onSelectSoftNote && (
+                <span className="text-[10px] text-amber-700 underline font-normal">
+                  クリックして編集 ✏️
+                </span>
+              )}
             </span>
             <span className="block text-[13.5px] leading-relaxed text-[#443b2e] text-wrap-pretty">
-              {note.comment}
+              {note.comment || "（コメント未入力 - クリックして入力）"}
             </span>
           </span>
         </span>
@@ -107,3 +125,4 @@ export function AnnotatedContent({ content, notes, softNotes, compact = false }:
   parts.push(content.slice(cursor));
   return <>{parts}</>;
 }
+
