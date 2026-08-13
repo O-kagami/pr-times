@@ -105,19 +105,21 @@ export default function Home() {
       />
 
       <main className="flex-1 mx-auto px-4 py-6 w-full max-w-[1200px]">
-        <div className="mb-4 rounded border border-sky-200 bg-sky-50 px-4 py-3">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-xs sm:text-sm text-[#1f3a5f]">
-              DB の <strong>company_name</strong> 一覧を確認できます。
-            </p>
-            <Link
-              href="/company-names"
-              className="inline-flex items-center justify-center rounded border border-[#0066cc] bg-white px-4 py-1.5 text-xs font-bold text-[#0066cc] hover:bg-sky-100"
-            >
-              company_name 一覧を見る
-            </Link>
+        {process.env.NODE_ENV !== "production" && (
+          <div className="mb-4 rounded border border-sky-200 bg-sky-50 px-4 py-3">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-xs sm:text-sm text-[#1f3a5f]">
+                DB の <strong>company_name</strong> 一覧を確認できます。
+              </p>
+              <Link
+                href="/company-names"
+                className="inline-flex items-center justify-center rounded border border-[#0066cc] bg-white px-4 py-1.5 text-xs font-bold text-[#0066cc] hover:bg-sky-100"
+              >
+                company_name 一覧を見る
+              </Link>
+            </div>
           </div>
-        </div>
+        )}
 
         <div className="items-start gap-8 grid grid-cols-1 lg:grid-cols-12">
           <section className="flex flex-col gap-4 lg:col-span-8">
