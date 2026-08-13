@@ -52,9 +52,9 @@ export function AnnotatedContent({ content, notes, softNotes, compact = false }:
         >
           {mark.anchor}
           <span
-            className={`absolute left-0 top-full z-30 mt-2 rounded-md border border-red-200 bg-white p-3 text-left font-normal leading-relaxed text-red-700 shadow-lg ${
+            className={`absolute left-1/2 top-full z-30 mt-2 -translate-x-1/2 rounded-md border border-red-200 bg-white p-4 text-left font-normal leading-relaxed text-red-700 shadow-lg ${
               activeMark === key ? "block" : "hidden"
-            } ${compact ? "w-64 text-xs" : "w-80 text-sm"}`}
+            } ${compact ? "w-64 max-w-[85vw] text-xs" : "w-80 max-w-[85vw] text-sm"}`}
           >
             {note.imageUrl && (
               <img
@@ -78,11 +78,11 @@ export function AnnotatedContent({ content, notes, softNotes, compact = false }:
         >
           {mark.anchor}
           <span
-            className={`absolute top-[calc(100%+12px)] left-0 z-20 w-80 max-w-[92vw] border border-[#e2d2b6] bg-[#fbf6ee] p-4 text-left shadow-lg cursor-default ${
+            className={`absolute left-1/2 top-[calc(100%+12px)] z-20 w-80 max-w-[85vw] -translate-x-1/2 border border-[#e2d2b6] bg-[#fbf6ee] px-5 py-4 text-left shadow-lg cursor-default ${
               activeMark === key ? "block" : "hidden"
             }`}
           >
-            <span className="absolute -top-[7px] left-6 h-3 w-3 rotate-45 border-t border-l border-[#e2d2b6] bg-[#fbf6ee]" />
+            <span className="absolute -top-[7px] left-1/2 h-3 w-3 -translate-x-1/2 rotate-45 border-t border-l border-[#e2d2b6] bg-[#fbf6ee]" />
             <span className="mb-2 block text-[11px] font-bold tracking-wide text-[#a8703a]">
               広報担当より
             </span>
