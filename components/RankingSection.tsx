@@ -3,19 +3,18 @@
 import React, { useState } from "react";
 import { PressRelease, RANKING_TABS } from "@/data/pressReleases";
 import { TrendingUp, Award, Heart, Calendar, ChevronRight } from "lucide-react";
+import Link from "next/link";
 
 interface RankingSectionProps {
   pressReleases: PressRelease[];
-  onSelectRelease: (release: PressRelease) => void;
+  onSelectRelease?: (release: PressRelease) => void;
 }
 
 export const RankingSection: React.FC<RankingSectionProps> = ({
   pressReleases,
-  onSelectRelease,
 }) => {
   const [activeTab, setActiveTab] = useState("general");
 
-  // Sort press releases according to active ranking tab
   const sortedReleases = [...pressReleases].sort((a, b) => {
     if (activeTab === "pv") {
       return (b.pvCount || 0) - (a.pvCount || 0);
@@ -23,7 +22,7 @@ export const RankingSection: React.FC<RankingSectionProps> = ({
     if (activeTab === "likes") {
       return (b.likesCount || 0) - (a.likesCount || 0);
     }
-    return 0; // Default order
+    return 0;
   });
 
   const topSix = sortedReleases.slice(0, 6);
@@ -82,9 +81,9 @@ export const RankingSection: React.FC<RankingSectionProps> = ({
           {topSix.map((release, index) => {
             const rank = index + 1;
             return (
-              <div
+              <Link
                 key={release.id}
-                onClick={() => onSelectRelease(release)}
+                href={`/press/${release.id}`}
                 className="group cursor-pointer bg-white rounded border border-gray-200 shadow-xs hover:shadow-md transition-all flex flex-col overflow-hidden relative"
               >
                 {/* Rank Badge */}
@@ -122,7 +121,7 @@ export const RankingSection: React.FC<RankingSectionProps> = ({
                     <span className="text-gray-400">{release.timestamp}</span>
                   </div>
                 </div>
-              </div>
+              </Link>
             );
           })}
         </div>

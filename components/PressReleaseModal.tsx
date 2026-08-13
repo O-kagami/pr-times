@@ -2,6 +2,7 @@
 
 import React from "react";
 import { PressRelease } from "@/data/pressReleases";
+import { AnnotatedContent } from "@/components/AnnotatedContent";
 import {
   X,
   Building2,
@@ -14,7 +15,9 @@ import {
   Phone,
   Globe,
   Tag,
+  Maximize2,
 } from "lucide-react";
+import Link from "next/link";
 
 interface PressReleaseModalProps {
   release: PressRelease | null;
@@ -41,13 +44,24 @@ export const PressReleaseModal: React.FC<PressReleaseModalProps> = ({
             </span>
             <span>プレスリリース詳細</span>
           </div>
-          <button
-            onClick={onClose}
-            className="p-1 text-gray-300 hover:text-white rounded hover:bg-white/10 transition-colors"
-            title="閉じる"
-          >
-            <X className="w-5 h-5" />
-          </button>
+
+          <div className="flex items-center gap-3">
+            <Link
+              href={`/press/${release.id}`}
+              onClick={onClose}
+              className="flex items-center gap-1 text-xs text-sky-300 hover:text-white font-medium bg-white/10 px-2.5 py-1 rounded transition-colors"
+            >
+              <Maximize2 className="w-3.5 h-3.5" />
+              <span>フルページで開く</span>
+            </Link>
+            <button
+              onClick={onClose}
+              className="p-1 text-gray-300 hover:text-white rounded hover:bg-white/10 transition-colors"
+              title="閉じる"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         {/* Modal Scrollable Body */}
@@ -115,9 +129,24 @@ export const PressReleaseModal: React.FC<PressReleaseModalProps> = ({
             />
           </div>
 
+          {/* Executive Summary Callout Box */}
+          {release.summaryHighlights && (
+            <div className="p-4 bg-sky-50 border border-sky-200 rounded-lg">
+              <h4 className="text-xs font-bold text-[#182b45] mb-2">【本件のポイント】</h4>
+              <ul className="space-y-1 text-xs text-gray-800">
+                {release.summaryHighlights.map((pt, idx) => (
+                  <li key={idx} className="flex items-start gap-1.5">
+                    <span className="text-[#0066cc] font-bold">・</span>
+                    <span>{pt}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
           {/* Press Release Content Text */}
           <div className="prose prose-sm max-w-none text-gray-800 leading-relaxed space-y-4 whitespace-pre-line font-sans">
-            {release.content}
+            <AnnotatedContent content={release.content} notes={release.inlineNotes} compact />
           </div>
 
           {/* Company Contact Box */}
@@ -160,13 +189,14 @@ export const PressReleaseModal: React.FC<PressReleaseModalProps> = ({
           {/* Social Share Bar */}
           <div className="flex items-center justify-between pt-4 border-t border-gray-100">
             <div className="flex items-center gap-2">
-              <button
-                onClick={() => alert("URLをコピーしました！")}
-                className="flex items-center gap-1 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded text-xs font-medium transition-colors"
+              <Link
+                href={`/press/${release.id}`}
+                onClick={onClose}
+                className="flex items-center gap-1 px-3 py-1.5 bg-[#0066cc] hover:bg-[#0055b8] text-white rounded text-xs font-bold transition-colors"
               >
-                <Share2 className="w-3.5 h-3.5" />
-                <span>シェアする</span>
-              </button>
+                <span>記事ページを全画面で表示</span>
+                <ExternalLink className="w-3.5 h-3.5" />
+              </Link>
             </div>
             <button
               onClick={onClose}

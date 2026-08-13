@@ -2,11 +2,12 @@
 
 import React from "react";
 import { PressRelease } from "@/data/pressReleases";
-import { Clock, Building2, Tag } from "lucide-react";
+import { Clock, Building2 } from "lucide-react";
+import Link from "next/link";
 
 interface PressReleaseCardProps {
   release: PressRelease;
-  onClick: () => void;
+  onClick?: () => void;
 }
 
 export const PressReleaseCard: React.FC<PressReleaseCardProps> = ({
@@ -14,7 +15,8 @@ export const PressReleaseCard: React.FC<PressReleaseCardProps> = ({
   onClick,
 }) => {
   return (
-    <article
+    <Link
+      href={`/press/${release.id}`}
       onClick={onClick}
       className="group cursor-pointer bg-white p-3.5 rounded border border-gray-200 hover:border-sky-300 hover:shadow-md transition-all duration-200 flex flex-col sm:flex-row gap-3 justify-between items-start"
     >
@@ -71,6 +73,6 @@ export const PressReleaseCard: React.FC<PressReleaseCardProps> = ({
           loading="lazy"
         />
       </div>
-    </article>
+    </Link>
   );
 };
