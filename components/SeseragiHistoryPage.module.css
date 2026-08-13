@@ -596,14 +596,16 @@
 
 .cardActive {
   z-index: 10;
-  transform: translateX(var(--card-offset)) translateY(0px) scale(1);
+  transform: translateX(var(--card-offset)) translateY(0px) rotate(0deg) scale(1);
+  transform-origin: bottom center;
   opacity: 1;
   box-shadow: 0 24px 60px rgb(8 124 132 / 16%);
 }
 
 .cardInactive {
   z-index: calc(10 - var(--card-index));
-  transform: translateX(var(--card-offset)) translateY(28px) scale(0.86);
+  transform: translateX(var(--card-offset)) translateY(32px) rotate(calc((2.5 - var(--card-index)) * 3deg)) scale(0.86);
+  transform-origin: bottom center;
   opacity: 0.65;
 }
 
