@@ -485,17 +485,19 @@
 
 /* Tinder Card Deck */
 .deckContainer {
-  position: relative;
-  width: 100%;
-  max-width: 440px;
-  height: 580px;
-  margin: 0 auto;
+  position: relative !important;
+  width: 100% !important;
+  max-width: 440px !important;
+  height: 580px !important;
+  margin: 0 auto !important;
 }
 
 .cardWrapper {
-  position: absolute;
-  width: 100%;
-  height: 100%;
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
   cursor: grab;
 }
 
@@ -504,16 +506,19 @@
 }
 
 .tinderCard {
-  width: 100%;
-  height: 100%;
-  border-radius: 24px;
-  border: 1px solid #d7e1df;
-  background: #fff;
-  box-shadow: 0 20px 50px rgb(20 62 66 / 8%);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  user-select: none;
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  border-radius: 24px !important;
+  border: 1px solid #d7e1df !important;
+  background: #fff !important;
+  box-shadow: 0 20px 50px rgb(20 62 66 / 8%) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+  user-select: none !important;
 }
 
 /* Tinder Swiper Control Panel */
@@ -722,9 +727,9 @@
 /* Responsive adjustments */
 @media (max-width: 640px) {
   .deckContainer {
-    max-width: 100%;
-    height: 520px;
-    padding: 0 8px;
+    max-width: 100% !important;
+    height: 520px !important;
+    padding: 0 8px !important;
   }
   
   .timelineContainer {
