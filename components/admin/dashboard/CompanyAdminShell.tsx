@@ -52,35 +52,51 @@ export function CompanyAdminShell({
   return (
     <div className="flex lg:flex-row flex-col bg-[#fdf7f1] min-h-screen text-[#4a332b]">
       <aside className="lg:sticky lg:top-0 bg-[#fffaf5] lg:border-r border-b lg:border-b-0 border-[#f0e2d6] w-full lg:w-[248px] lg:h-screen shrink-0">
-        <div className="flex lg:flex-col gap-4 lg:gap-6 px-5 lg:px-4 py-4 lg:py-6">
-          <div className="min-w-0">
-            <Link href="/" className="inline-block font-extrabold text-lg tracking-tight">
+        <div className="flex flex-col gap-3 lg:gap-6 px-5 lg:px-4 py-3 lg:py-6">
+          {/* スマホでは1段目（ロゴ・企業名・公開ページ）、PCではサイドバー上部 */}
+          <div className="flex lg:flex-col items-center lg:items-stretch gap-3 lg:gap-0 min-w-0">
+            <Link
+              href="/"
+              className="inline-block font-extrabold text-lg tracking-tight shrink-0"
+            >
               PR<span className="font-light text-[#e0714c]">TIMES</span>
-              <span className="ml-2 font-medium text-[#a98a76] text-[11px]">for 広報</span>
+              <span className="hidden lg:inline ml-2 font-medium text-[#a98a76] text-[11px]">
+                for 広報
+              </span>
             </Link>
 
-            <div className="hidden lg:flex items-start gap-2.5 bg-[#fdece4] mt-5 p-3 rounded-xl">
-              <span className="flex justify-center items-center bg-white rounded-lg w-8 h-8 shrink-0">
-                <Building2 className="w-4 h-4 text-[#e0714c]" />
+            <div className="flex flex-1 lg:flex-none items-center lg:items-start gap-2 lg:gap-2.5 bg-[#fdece4] lg:mt-5 px-2.5 lg:px-3 py-1.5 lg:py-3 rounded-full lg:rounded-xl min-w-0">
+              <span className="flex justify-center items-center bg-white rounded-md lg:rounded-lg w-6 lg:w-8 h-6 lg:h-8 shrink-0">
+                <Building2 className="w-3.5 lg:w-4 h-3.5 lg:h-4 text-[#e0714c]" />
               </span>
               <span className="min-w-0">
-                <span className="block font-bold text-[13px] leading-snug">
+                <span className="block font-bold text-[12px] lg:text-[13px] leading-snug truncate lg:whitespace-normal">
                   {companyName}
                 </span>
-                <span className="block mt-0.5 text-[#a98a76] text-[11px]">
+                <span className="hidden lg:block mt-0.5 text-[#a98a76] text-[11px]">
                   {industryName}
                 </span>
               </span>
             </div>
+
+            {/* PCでは下部に同じリンクがあるので、スマホだけアイコンで出す */}
+            <Link
+              href={publicBase}
+              aria-label="公開ページを見る"
+              className="lg:hidden flex justify-center items-center bg-white border border-[#f0e2d6] rounded-full w-8 h-8 text-[#a98a76] shrink-0"
+            >
+              <ExternalLink className="w-4 h-4" />
+            </Link>
           </div>
 
-          <nav className="flex-1 lg:mt-2">
-            <ul className="flex lg:flex-col gap-1 lg:gap-1.5 overflow-x-auto">
+          {/* スマホでは2段目に横スクロールのタブとして並べる */}
+          <nav className="lg:flex-1 lg:mt-2 -mx-5 lg:mx-0 overflow-x-auto lg:overflow-visible [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <ul className="flex lg:flex-col gap-1 lg:gap-1.5 px-5 lg:px-0">
               {items.map((item) => {
                 const active = pathname === item.href;
                 const Icon = item.icon;
                 return (
-                  <li key={item.href}>
+                  <li key={item.href} className="shrink-0">
                     <Link
                       href={item.href}
                       className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-[13px] whitespace-nowrap transition-colors ${
