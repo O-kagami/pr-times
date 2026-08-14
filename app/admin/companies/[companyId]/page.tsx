@@ -54,13 +54,22 @@ export default async function CompanyAdminDashboard({
   const now = new Date();
   const milestones = computeMilestones(company.releases, now);
   const excludeCompanyId = /^\d+$/.test(companyId) ? Number(companyId) : null;
+  const peerSince = new Date(now.getTime() - PEER_WINDOW_DAYS * DAY_MS);
+  const targetReleases = company.releases.filter(
+    (release) => release.publishedAt >= peerSince
+  );
 
   const { scope, peers } = await listPeerCompanies({
     industryId: company.industryId,
     prefecture: company.prefecture,
     excludeCompanyId,
-    since: new Date(now.getTime() - PEER_WINDOW_DAYS * DAY_MS),
+    since: peerSince,
     limit: 8,
+    targetKeywords: targetReleases.flatMap((release) => release.keywords),
+  }).catch((error) => {
+    // 類似企業は補助情報なので、RDSが一時的に遅くても管理画面本体は表示する。
+    console.error("Failed to load peer companies", error);
+    return { scope: "nationwide" as const, peers: [] };
   });
 
   // カレンダーは似た企業カードと同じ範囲（県内 or 全国）に合わせる
@@ -70,6 +79,10 @@ export default async function CompanyAdminDashboard({
     excludeCompanyId,
     since: new Date(now.getTime() - CALENDAR_WINDOW_DAYS * DAY_MS),
     limit: 80,
+    companyIds: peers.map((peer) => peer.companyId),
+  }).catch((error) => {
+    console.error("Failed to load peer releases", error);
+    return [];
   });
 
   const calendarEntries: CalendarEntry[] = peerReleases.map((release) => ({

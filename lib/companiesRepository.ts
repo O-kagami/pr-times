@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { MAX_DB_READ_ROWS } from "@/lib/dbLimits";
 import type { PressRelease } from "@/data/pressReleases";
 
 export interface DbCompany {
@@ -137,12 +138,14 @@ export const listCompanyReleases = async (companyId: number): Promise<DbRelease[
     ])
     .where("release.company_id", "=", companyId)
     .orderBy("release.created_at", "desc")
+    .limit(MAX_DB_READ_ROWS)
     .execute();
 
   if (rows.length === 0) {
     return [];
   }
 
+  const releaseIds = rows.map((row) => row.release_id);
   const keywordRows = await db
     .selectFrom("release_keyword")
     .innerJoin("keyword", "keyword.keyword_id", "release_keyword.keyword_id")
@@ -152,7 +155,9 @@ export const listCompanyReleases = async (companyId: number): Promise<DbRelease[
       "release_keyword.sort_priority",
     ])
     .where("release_keyword.company_id", "=", companyId)
+    .where("release_keyword.release_id", "in", releaseIds)
     .orderBy("release_keyword.sort_priority", "asc")
+    .limit(MAX_DB_READ_ROWS)
     .execute();
 
   const keywordsByRelease = new Map<number, string[]>();
@@ -241,6 +246,7 @@ export const getCompanyReleaseAsPressRelease = async (
     .where("release_keyword.company_id", "=", companyId)
     .where("release_keyword.release_id", "=", releaseId)
     .orderBy("release_keyword.sort_priority", "asc")
+    .limit(MAX_DB_READ_ROWS)
     .execute();
 
   const body = row.body ?? "";

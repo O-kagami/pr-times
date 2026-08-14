@@ -4,7 +4,7 @@ import { listCompanyNames } from "@/lib/companyRepository";
 export const dynamic = "force-dynamic";
 
 export default async function CompanyNamesPage() {
-  const { dbConnected, companies } = await listCompanyNames(300);
+  const { dbConnected, companies } = await listCompanyNames(100);
 
   return (
     <main className="mx-auto w-full max-w-[960px] px-4 py-8">

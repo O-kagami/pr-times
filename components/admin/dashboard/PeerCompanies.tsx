@@ -1,6 +1,6 @@
 import React from "react";
 import Link from "next/link";
-import { MapPin, Users } from "lucide-react";
+import { Lightbulb, MapPin, Tags, Users } from "lucide-react";
 import type { PeerCompany } from "@/lib/adminDashboardRepository";
 
 const formatDate = (date: Date) =>
@@ -18,14 +18,46 @@ export function PeerCompanies({
   peers: PeerCompany[];
   scopeLabel: string;
 }) {
+  const topicCounts = new Map<string, number>();
+  peers.forEach((peer) => {
+    peer.topics.forEach((topic) => {
+      topicCounts.set(topic, (topicCounts.get(topic) ?? 0) + 1);
+    });
+  });
+  const frequentTopics = [...topicCounts.entries()]
+    .sort((left, right) => right[1] - left[1] || left[0].localeCompare(right[0], "ja"))
+    .slice(0, 3)
+    .map(([topic]) => topic);
+
   return (
     <section>
       <div className="mb-3">
         <h2 className="font-extrabold text-[#4a332b] text-lg">似ている会社の、最近</h2>
         <p className="mt-0.5 text-[#a98a76] text-[12px]">
-          {scopeLabel}で発信している会社です。同じ悩みを持つ仲間の一手が見えます。
+          {scopeLabel}から、発信テーマや企業規模も近い会社を選びました。
         </p>
       </div>
+
+      {frequentTopics.length > 0 && (
+        <div className="flex items-start gap-3 bg-[#fff8ef] mb-4 px-4 py-3 border border-[#f2ddc7] rounded-2xl">
+          <span className="flex justify-center items-center bg-white rounded-full w-8 h-8 text-[#e0714c] shrink-0">
+            <Lightbulb className="w-4 h-4" aria-hidden="true" />
+          </span>
+          <div>
+            <p className="font-bold text-[#4a332b] text-[12px]">発信のヒント</p>
+            <p className="mt-0.5 text-[#7a5c4d] text-[12px] leading-relaxed">
+              似た会社の最近のリリースでは
+              {frequentTopics.map((topic, index) => (
+                <React.Fragment key={topic}>
+                  {index > 0 && "、"}
+                  <span className="font-bold">「{topic}」</span>
+                </React.Fragment>
+              ))}
+              が目立ちます。
+            </p>
+          </div>
+        </div>
+      )}
 
       {peers.length === 0 ? (
         <div className="bg-white p-10 border border-[#f0e2d6] border-dashed rounded-2xl text-center">
@@ -67,6 +99,24 @@ export function PeerCompanies({
                     <MapPin className="w-3 h-3" />
                     {peer.prefecture}
                   </span>
+                )}
+
+                <div className="flex flex-wrap gap-1 mt-2">
+                  {peer.similarityReasons.map((reason) => (
+                    <span
+                      key={reason}
+                      className="bg-[#fff4ec] px-2 py-1 rounded-full text-[#9b674e] text-[10px] leading-none"
+                    >
+                      {reason}
+                    </span>
+                  ))}
+                </div>
+
+                {peer.topics.length > 0 && (
+                  <p className="flex items-start gap-1 mt-2 text-[#a06f59] text-[10px] leading-relaxed">
+                    <Tags className="mt-0.5 w-3 h-3 shrink-0" aria-hidden="true" />
+                    <span>最近のテーマ：{peer.topics.join("・")}</span>
+                  </p>
                 )}
 
                 <p className="mt-2 text-[#7a5c4d] text-[11px] leading-relaxed line-clamp-2">
