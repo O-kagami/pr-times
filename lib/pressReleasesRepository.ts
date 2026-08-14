@@ -1,4 +1,5 @@
 import { ensurePressReleasesTable, db, type JsonValue } from "@/lib/db";
+import { MAX_DB_READ_ROWS } from "@/lib/dbLimits";
 import type { PressRelease } from "@/data/pressReleases";
 
 const isPressReleaseArray = (value: unknown): value is PressRelease[] => {
@@ -12,6 +13,7 @@ export const listPressReleases = async (): Promise<PressRelease[]> => {
     .selectFrom("press_releases")
     .select(["payload", "updated_at"])
     .orderBy("updated_at", "desc")
+    .limit(MAX_DB_READ_ROWS)
     .execute();
 
   const releases = rows

@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { clampDbReadLimit, MAX_DB_READ_ROWS } from "@/lib/dbLimits";
 
 /**
  * 管理画面ダッシュボード用の読み取りクエリ。
@@ -118,7 +119,7 @@ export const listPeerCompanies = async ({
       query = query.where("company.company_id", "!=", excludeCompanyId);
     }
 
-    return query.execute();
+    return query.limit(MAX_DB_READ_ROWS).execute();
   };
 
   let scope: PeerScope = prefecture ? "prefecture" : "nationwide";
@@ -165,6 +166,7 @@ export const listPeerCompanies = async ({
           )
         )
       )
+      .limit(MAX_DB_READ_ROWS)
       .execute(),
   ]);
 
@@ -313,7 +315,7 @@ export const listPeerReleases = async ({
     .where("release.created_at", ">=", since)
     .where("company.industry_id", "=", industryId)
     .orderBy("release.created_at", "desc")
-    .limit(limit);
+    .limit(clampDbReadLimit(limit));
 
   if (companyIds) {
     query = query.where("release.company_id", "in", companyIds);
