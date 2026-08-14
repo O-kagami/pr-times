@@ -64,12 +64,20 @@ export const ArticlePage: React.FC<ArticlePageProps> = ({ release }) => {
   const companyHref = getCompanyHref(release.companyId);
 
   return (
-    <div className="min-h-screen bg-white text-[#1a1a1a] flex flex-col font-sans">
+    <div
+      className={`min-h-screen text-[#1a1a1a] flex flex-col font-sans transition-colors duration-700 ${
+        showSoftPr ? "bg-[#fdf6ec]" : "bg-white"
+      }`}
+    >
       <Header searchQuery="" onSearchChange={() => {}} />
       <CategoryNav selectedCategory="all" onSelectCategory={() => {}} />
 
       {/* Breadcrumb */}
-      <div className="border-b border-[#e5e5e5]">
+      <div
+        className={`border-b transition-colors duration-700 ${
+          showSoftPr ? "border-[#f0e2cd]" : "border-[#e5e5e5]"
+        }`}
+      >
         <div className="max-w-[900px] mx-auto px-4 py-2.5 flex items-center gap-1 text-xs text-[#767676] overflow-x-auto">
           <Link href="/" className="hover:text-[#0066cc] whitespace-nowrap">
             PR TIMES
@@ -92,7 +100,11 @@ export const ArticlePage: React.FC<ArticlePageProps> = ({ release }) => {
       <main className="max-w-[900px] mx-auto w-full px-4 py-8 flex-1">
         <article>
           {/* Byline */}
-          <div className="flex flex-wrap items-center justify-between gap-3 pb-4 mb-2 border-b border-[#e5e5e5] text-sm">
+          <div
+            className={`flex flex-wrap items-center justify-between gap-3 pb-4 mb-2 border-b text-sm transition-colors duration-700 ${
+              showSoftPr ? "border-[#f0e2cd]" : "border-[#e5e5e5]"
+            }`}
+          >
             <div className="flex items-center gap-3">
               <span className="font-bold text-[#1a1a1a]">{release.company}</span>
               <time className="text-[#767676]">{release.publishedAt}</time>
@@ -105,20 +117,26 @@ export const ArticlePage: React.FC<ArticlePageProps> = ({ release }) => {
                     onClick={handleToggleSoftPr}
                     role="switch"
                     aria-checked={showSoftPr}
-                    className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-bold transition-colors ${
-                      showSoftPr ? "text-[#a8703a]" : "text-[#999] hover:text-[#1a1a1a]"
+                    className={`flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-[13px] font-bold transition-all duration-300 active:scale-95 ${
+                      showSoftPr
+                        ? "border-[#e0b072] bg-[#fbead2] text-[#8f5b23] shadow-[0_2px_10px_rgba(168,112,58,0.22)]"
+                        : "border-[#f0dfc4] bg-[#fdf8f0] text-[#b8843f] hover:border-[#e0b072] hover:bg-[#fbead2] hover:text-[#8f5b23]"
                     }`}
                   >
-                    <Sparkles className="w-3.5 h-3.5" />
+                    <Sparkles
+                      className={`w-4 h-4 transition-transform duration-500 ${
+                        showSoftPr ? "scale-110 rotate-12" : ""
+                      }`}
+                    />
                     やわらかいPR
                     <span
-                      className={`relative inline-flex h-4 w-7 shrink-0 rounded-full transition-colors ${
-                        showSoftPr ? "bg-[#a8703a]" : "bg-[#d9d9d9]"
+                      className={`relative inline-flex h-5 w-9 shrink-0 rounded-full transition-colors duration-300 ${
+                        showSoftPr ? "bg-[#c8873f]" : "bg-[#e6d5bb]"
                       }`}
                     >
                       <span
-                        className={`absolute top-0.5 h-3 w-3 rounded-full bg-white transition-transform ${
-                          showSoftPr ? "translate-x-3.5" : "translate-x-0.5"
+                        className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-transform duration-300 ${
+                          showSoftPr ? "translate-x-[18px]" : "translate-x-0.5"
                         }`}
                       />
                     </span>
@@ -171,14 +189,22 @@ export const ArticlePage: React.FC<ArticlePageProps> = ({ release }) => {
         </article>
 
         {/* Company Info & Related Releases */}
-        <div className="mt-14 pt-8 border-t border-[#e5e5e5] grid grid-cols-1 md:grid-cols-2 gap-10">
+        <div
+          className={`mt-14 pt-8 border-t grid grid-cols-1 md:grid-cols-2 gap-10 transition-colors duration-700 ${
+            showSoftPr ? "border-[#f0e2cd]" : "border-[#e5e5e5]"
+          }`}
+        >
           <div>
             <h3 className="text-sm font-bold text-[#1a1a1a] mb-3">配信元企業</h3>
             <div className="flex items-center justify-between gap-3 pb-3 mb-3 border-b border-[#e5e5e5]">
               <span className="text-sm font-bold text-[#1a1a1a]">{release.company}</span>
               <button
                 onClick={() => alert("企業フォロー登録を完了しました")}
-                className="px-4 py-1.5 border border-[#1a1a1a] text-[#1a1a1a] text-xs font-bold hover:bg-[#1a1a1a] hover:text-white transition-colors"
+                className={`px-4 py-1.5 border text-xs font-bold transition-all duration-300 ${
+                  showSoftPr
+                    ? "rounded-full border-[#d9a86a] text-[#8f5b23] hover:bg-[#c8873f] hover:text-white"
+                    : "border-[#1a1a1a] text-[#1a1a1a] hover:bg-[#1a1a1a] hover:text-white"
+                }`}
               >
                 フォロー
               </button>
@@ -219,7 +245,9 @@ export const ArticlePage: React.FC<ArticlePageProps> = ({ release }) => {
                       <img
                         src={rel.imageUrl}
                         alt=""
-                        className="w-16 h-11 object-cover shrink-0 bg-[#f5f5f5]"
+                        className={`w-16 h-11 object-cover shrink-0 bg-[#f5f5f5] transition-all duration-500 ${
+                          showSoftPr ? "rounded-xl" : ""
+                        }`}
                       />
                       <div className="min-w-0">
                         <span className="block text-xs text-[#1a1a1a] group-hover:text-[#0066cc] line-clamp-2 leading-snug">

@@ -172,7 +172,7 @@ export function AnnotatedContent({
         <span
           key={key}
           data-annotated-mark
-          className="relative inline cursor-help rounded-sm bg-amber-100 px-0.5 font-semibold decoration-amber-500 decoration-2 underline underline-offset-2 transition-colors hover:bg-amber-200"
+          className="relative inline cursor-help rounded-md bg-amber-100 px-1 font-semibold decoration-amber-500 decoration-2 underline underline-offset-2 transition-colors hover:bg-amber-200"
           onMouseEnter={
             canHover ? (e) => openMark(key, e.currentTarget, width) : undefined
           }
@@ -186,12 +186,12 @@ export function AnnotatedContent({
               active?.key === key && active.placement === "above" ? "pb-2" : "pt-2"
             } ${activeMark === key ? "block" : "hidden"} ${compact ? "text-xs" : "text-sm"}`}
           >
-            <span className="block rounded-md border border-red-200 bg-white p-4 text-left font-normal leading-relaxed text-red-700 shadow-lg">
+            <span className="block rounded-2xl border border-red-200 bg-white p-4 text-left font-normal leading-relaxed text-red-700 shadow-lg">
               {note.imageUrl && (
                 <img
                   src={note.imageUrl}
                   alt="補足イメージ"
-                  className="mb-2 h-24 w-full rounded object-cover"
+                  className="mb-2 h-24 w-full rounded-xl object-cover"
                 />
               )}
               {note.text}
@@ -205,7 +205,7 @@ export function AnnotatedContent({
         <span
           key={key}
           data-annotated-mark
-          className="relative inline cursor-pointer bg-[linear-gradient(transparent_62%,#f7e3b4_62%)] pb-px group"
+          className="relative inline cursor-pointer rounded-[4px] bg-[linear-gradient(transparent_58%,#fae4bb_58%)] px-0.5 pb-px transition-colors hover:bg-[linear-gradient(transparent_0%,#fbeed6_0%)] group"
           onMouseEnter={
             canHover ? (e) => openMark(key, e.currentTarget, POPOVER_WIDTH) : undefined
           }
@@ -228,14 +228,14 @@ export function AnnotatedContent({
             } ${activeMark === key ? "block animate-in fade-in" : "hidden"}`}
           >
             <span
-              className={`relative block rounded-md border border-[#e2d2b6] bg-[#fbf6ee] px-5 py-4 text-left shadow-xl transition-all ${
+              className={`relative block rounded-[28px] border border-[#e2d2b6] bg-[#fdf3e4] px-6 py-5 text-left shadow-[0_8px_28px_rgba(168,112,58,0.18)] transition-all ${
                 onSelectSoftNote ? "cursor-pointer hover:border-[#d9bf94]" : "cursor-default"
               }`}
             >
               {/* しっぽはマーカー側の辺に出し、横に寄せた分だけ戻してマーカーを指す */}
               <span
                 style={active?.key === key ? { left: active.tailLeft } : undefined}
-                className={`absolute h-3 w-3 -translate-x-1/2 rotate-45 border-[#e2d2b6] bg-[#fbf6ee] ${
+                className={`absolute h-3 w-3 -translate-x-1/2 rotate-45 rounded-[4px] border-[#e2d2b6] bg-[#fdf3e4] ${
                   active?.key === key && active.placement === "above"
                     ? "-bottom-[7px] border-r border-b"
                     : "-top-[7px] border-t border-l"
@@ -245,7 +245,7 @@ export function AnnotatedContent({
                 <img
                   src={note.imageUrl}
                   alt="広報補足画像"
-                  className="mb-3 h-28 w-full rounded-sm object-cover border border-[#e2d2b6]"
+                  className="mb-3 h-28 w-full rounded-2xl object-cover border border-[#e2d2b6]"
                 />
               )}
               <span className="mb-2 flex items-center justify-between text-[11px] font-bold tracking-wide text-[#a8703a]">

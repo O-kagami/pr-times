@@ -12,6 +12,8 @@ interface StandardArticleContentProps {
 
 export function StandardArticleContent({ release, showSoftPr = false }: StandardArticleContentProps) {
   const softPr = showSoftPr ? release.softPr : undefined;
+  // やわらかいPR表示中は角を丸めて全体の印象をやわらかくする
+  const soft = Boolean(softPr);
 
   return (
     <>
@@ -26,19 +28,25 @@ export function StandardArticleContent({ release, showSoftPr = false }: Standard
       )}
 
       {softPr && (
-        <div className="mb-6 flex items-center gap-3 border border-[#ebdfcb] bg-[#fbf6ee] px-4 py-3">
-          <div className="h-8 w-8 shrink-0 rounded-full border border-[#e0d5c0] bg-[repeating-linear-gradient(135deg,#efe7d9_0_6px,#e6dcc9_6px_12px)]" />
+        <div className="mb-6 flex items-center gap-3 rounded-[28px] border border-[#ebdfcb] bg-[#fdf3e4] px-5 py-4 shadow-[0_2px_12px_rgba(168,112,58,0.08)]">
+          <div className="h-9 w-9 shrink-0 rounded-full border border-[#e0d5c0] bg-[repeating-linear-gradient(135deg,#efe7d9_0_6px,#e6dcc9_6px_12px)]" />
           <p className="text-xs leading-relaxed text-[#574d40]">
             <span className="font-bold">広報担当 {softPr.author.name}（{softPr.author.role}）</span>
             が本文にコメントを添えています。文中の
-            <span className="bg-[linear-gradient(transparent_62%,#f7e3b4_62%)]">マーカー部分</span>
+            <span className="rounded-[3px] bg-[linear-gradient(transparent_58%,#fae4bb_58%)] px-0.5">
+              マーカー部分
+            </span>
             にカーソルを合わせるとご覧いただけます。
           </p>
         </div>
       )}
 
       {/* PV & Keywords */}
-      <div className="flex items-center justify-between text-xs text-[#999] pb-4 mb-6 border-b border-[#e5e5e5] flex-wrap gap-2">
+      <div
+        className={`flex items-center justify-between text-xs text-[#999] pb-4 mb-6 border-b flex-wrap gap-2 transition-colors duration-700 ${
+          soft ? "border-[#f0e2cd]" : "border-[#e5e5e5]"
+        }`}
+      >
         <span>閲覧数：{release.pvCount?.toLocaleString()} PV</span>
         {release.keywords.length > 0 && (
           <div className="flex items-center gap-2 flex-wrap">
@@ -56,13 +64,19 @@ export function StandardArticleContent({ release, showSoftPr = false }: Standard
         <img
           src={release.imageUrl}
           alt={release.title}
-          className="w-full aspect-video object-cover"
+          className={`w-full aspect-video object-cover transition-all duration-700 ${
+            soft ? "rounded-[32px]" : ""
+          }`}
         />
       </div>
 
       {/* Executive Summary */}
       {release.summaryHighlights && (
-        <div className="mb-8">
+        <div
+          className={`mb-8 transition-all duration-700 ${
+            soft ? "rounded-[28px] border border-[#f0e2cd] bg-[#fdf9f2] px-6 py-5" : ""
+          }`}
+        >
           <h3 className="text-base font-bold text-[#1a1a1a] mb-3">■ 本リリースのポイント</h3>
           <ul className="space-y-1.5 text-sm text-[#1a1a1a]">
             {release.summaryHighlights.map((point, index) => (
@@ -86,7 +100,7 @@ export function StandardArticleContent({ release, showSoftPr = false }: Standard
 
       {/* Soft PR Reflection */}
       {softPr && (
-        <div className="mb-10 border border-[#ebdfcb] bg-[#fbf6ee] px-6 py-8 md:px-10">
+        <div className="mb-10 rounded-[36px] border border-[#ebdfcb] bg-[#fdf3e4] px-6 py-8 shadow-[0_4px_20px_rgba(168,112,58,0.1)] md:px-10">
           <div className="mb-5 text-[13px] font-bold tracking-wide text-[#a8703a]">
             広報担当より　このリリースについて
           </div>
@@ -115,7 +129,9 @@ export function StandardArticleContent({ release, showSoftPr = false }: Standard
               key={i}
               src={imgUrl}
               alt={`図表 ${i + 1}`}
-              className="w-full aspect-video object-cover bg-[#f5f5f5]"
+              className={`w-full aspect-video object-cover bg-[#f5f5f5] transition-all duration-700 ${
+                soft ? "rounded-[24px]" : ""
+              }`}
             />
           ))}
         </div>
@@ -127,7 +143,11 @@ export function StandardArticleContent({ release, showSoftPr = false }: Standard
           {release.surveyTables.map((table, tIdx) => (
             <div key={tIdx} className="space-y-2">
               <h3 className="text-sm font-bold text-[#1a1a1a]">{table.title}</h3>
-              <div className="overflow-x-auto border border-[#d9d9d9]">
+              <div
+                className={`overflow-x-auto border transition-all duration-700 ${
+                  soft ? "rounded-[20px] border-[#ebdfcb]" : "border-[#d9d9d9]"
+                }`}
+              >
                 <table className="w-full text-xs text-left border-collapse">
                   <thead>
                     <tr className="bg-[#f5f5f5] border-b border-[#d9d9d9] text-[#1a1a1a] font-bold">
@@ -166,7 +186,11 @@ export function StandardArticleContent({ release, showSoftPr = false }: Standard
 
       {/* QR Code & App Download Block */}
       {release.qrCodes && release.qrCodes.length > 0 && (
-        <div className="mb-10 border border-[#e5e5e5] p-5 flex flex-col sm:flex-row items-center justify-between gap-6">
+        <div
+          className={`mb-10 border p-5 flex flex-col sm:flex-row items-center justify-between gap-6 transition-all duration-700 ${
+            soft ? "rounded-[28px] border-[#ebdfcb] bg-[#fdf9f2]" : "border-[#e5e5e5]"
+          }`}
+        >
           <div className="space-y-1.5 text-center sm:text-left">
             <h4 className="text-sm font-bold text-[#1a1a1a]">スマートフォンから今すぐアクセス</h4>
             <p className="text-xs text-[#666] max-w-md">
@@ -176,7 +200,13 @@ export function StandardArticleContent({ release, showSoftPr = false }: Standard
           <div className="flex items-center gap-4 shrink-0">
             {release.qrCodes.map((qr, qIdx) => (
               <div key={qIdx} className="text-center space-y-1">
-                <img src={qr.qrUrl} alt={qr.label} className="w-20 h-20 mx-auto" />
+                <img
+                  src={qr.qrUrl}
+                  alt={qr.label}
+                  className={`w-20 h-20 mx-auto transition-all duration-700 ${
+                    soft ? "rounded-2xl" : ""
+                  }`}
+                />
                 <span className="text-[10px] text-[#666] block">{qr.label}</span>
               </div>
             ))}
@@ -185,14 +215,22 @@ export function StandardArticleContent({ release, showSoftPr = false }: Standard
       )}
 
       {/* Download Press Kit Assets */}
-      <div className="mb-10 pt-5 border-t border-[#e5e5e5]">
+      <div
+        className={`mb-10 pt-5 border-t transition-colors duration-700 ${
+          soft ? "border-[#f0e2cd]" : "border-[#e5e5e5]"
+        }`}
+      >
         <a
           href="#"
           onClick={(e) => {
             e.preventDefault();
             alert("素材一括ZIPファイルのダウンロードを開始しました");
           }}
-          className="inline-flex items-center gap-2 px-4 py-2 border border-[#1a1a1a] text-[#1a1a1a] text-xs font-bold hover:bg-[#1a1a1a] hover:text-white transition-colors"
+          className={`inline-flex items-center gap-2 px-4 py-2 border text-xs font-bold transition-all duration-300 ${
+            soft
+              ? "rounded-full border-[#d9a86a] text-[#8f5b23] hover:bg-[#c8873f] hover:text-white"
+              : "border-[#1a1a1a] text-[#1a1a1a] hover:bg-[#1a1a1a] hover:text-white"
+          }`}
         >
           <Download className="w-3.5 h-3.5" />
           プレスリリース素材をダウンロード
@@ -203,53 +241,63 @@ export function StandardArticleContent({ release, showSoftPr = false }: Standard
       {release.companyProfile && (
         <div className="mb-8">
           <h3 className="text-sm font-bold text-[#1a1a1a] mb-3">■ 会社概要</h3>
-          <table className="w-full border-collapse text-xs border border-[#e5e5e5]">
-            <tbody className="divide-y divide-[#e5e5e5]">
-              <tr>
-                <th className="py-2 px-3 text-left bg-[#f9f9f9] text-[#666] w-28 font-medium align-top">社名</th>
-                <td className="py-2 px-3 text-[#1a1a1a] font-bold">{release.companyProfile.name}</td>
-              </tr>
-              <tr>
-                <th className="py-2 px-3 text-left bg-[#f9f9f9] text-[#666] font-medium align-top">代表者</th>
-                <td className="py-2 px-3 text-[#1a1a1a]">{release.companyProfile.representative}</td>
-              </tr>
-              <tr>
-                <th className="py-2 px-3 text-left bg-[#f9f9f9] text-[#666] font-medium align-top">所在地</th>
-                <td className="py-2 px-3 text-[#1a1a1a]">{release.companyProfile.address}</td>
-              </tr>
-              <tr>
-                <th className="py-2 px-3 text-left bg-[#f9f9f9] text-[#666] font-medium align-top">設立</th>
-                <td className="py-2 px-3 text-[#1a1a1a]">{release.companyProfile.established}</td>
-              </tr>
-              <tr>
-                <th className="py-2 px-3 text-left bg-[#f9f9f9] text-[#666] font-medium align-top">資本金</th>
-                <td className="py-2 px-3 text-[#1a1a1a]">{release.companyProfile.capital}</td>
-              </tr>
-              <tr>
-                <th className="py-2 px-3 text-left bg-[#f9f9f9] text-[#666] font-medium align-top">事業内容</th>
-                <td className="py-2 px-3 text-[#1a1a1a]">{release.companyProfile.business}</td>
-              </tr>
-              <tr>
-                <th className="py-2 px-3 text-left bg-[#f9f9f9] text-[#666] font-medium align-top">URL</th>
-                <td className="py-2 px-3 text-[#0066cc]">
-                  <a
-                    href={release.companyProfile.website}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="underline hover:no-underline"
-                  >
-                    {release.companyProfile.website}
-                  </a>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+          <div
+            className={`border overflow-hidden transition-all duration-700 ${
+              soft ? "rounded-[20px] border-[#ebdfcb]" : "border-[#e5e5e5]"
+            }`}
+          >
+            <table className="w-full border-collapse text-xs">
+              <tbody className="divide-y divide-[#e5e5e5]">
+                <tr>
+                  <th className="py-2 px-3 text-left bg-[#f9f9f9] text-[#666] w-28 font-medium align-top">社名</th>
+                  <td className="py-2 px-3 text-[#1a1a1a] font-bold">{release.companyProfile.name}</td>
+                </tr>
+                <tr>
+                  <th className="py-2 px-3 text-left bg-[#f9f9f9] text-[#666] font-medium align-top">代表者</th>
+                  <td className="py-2 px-3 text-[#1a1a1a]">{release.companyProfile.representative}</td>
+                </tr>
+                <tr>
+                  <th className="py-2 px-3 text-left bg-[#f9f9f9] text-[#666] font-medium align-top">所在地</th>
+                  <td className="py-2 px-3 text-[#1a1a1a]">{release.companyProfile.address}</td>
+                </tr>
+                <tr>
+                  <th className="py-2 px-3 text-left bg-[#f9f9f9] text-[#666] font-medium align-top">設立</th>
+                  <td className="py-2 px-3 text-[#1a1a1a]">{release.companyProfile.established}</td>
+                </tr>
+                <tr>
+                  <th className="py-2 px-3 text-left bg-[#f9f9f9] text-[#666] font-medium align-top">資本金</th>
+                  <td className="py-2 px-3 text-[#1a1a1a]">{release.companyProfile.capital}</td>
+                </tr>
+                <tr>
+                  <th className="py-2 px-3 text-left bg-[#f9f9f9] text-[#666] font-medium align-top">事業内容</th>
+                  <td className="py-2 px-3 text-[#1a1a1a]">{release.companyProfile.business}</td>
+                </tr>
+                <tr>
+                  <th className="py-2 px-3 text-left bg-[#f9f9f9] text-[#666] font-medium align-top">URL</th>
+                  <td className="py-2 px-3 text-[#0066cc]">
+                    <a
+                      href={release.companyProfile.website}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="underline hover:no-underline"
+                    >
+                      {release.companyProfile.website}
+                    </a>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
       {/* Press Contact Section */}
       {release.contactInfo && (
-        <div className="pt-5 border-t border-[#e5e5e5] space-y-3">
+        <div
+          className={`pt-5 border-t space-y-3 transition-colors duration-700 ${
+            soft ? "border-[#f0e2cd]" : "border-[#e5e5e5]"
+          }`}
+        >
           <h4 className="text-xs font-bold text-[#1a1a1a]">
             【本件に関する報道関係者からのお問い合わせ先】
           </h4>
